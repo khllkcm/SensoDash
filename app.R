@@ -2,6 +2,7 @@ library(shiny)
 library(argonR)
 library(argonDash)
 library(shinycssloaders)
+library(plotly)
 
 setwd("~/School/Atelier/")
 source("atelier.R")
@@ -62,41 +63,48 @@ shiny::shinyApp(
     body = argonDashBody(argonTabItems(
       
       ## EDA ----
-      
-      argonTabItem(tabName = "eda",
-                   argonRow(
-                     br(),
-                     br(),
-                     argonCard(
-                       width = 12,
-                       title = "Argon Card",
-                       src = NULL,
-                       hover_lift = FALSE,
-                       shadow = TRUE,
-                       shadow_size = NULL,
-                       hover_shadow = FALSE,
-                       border_level = 0,
-                       icon = "atom",
-                       status = "primary",
-                       background_color = NULL,
-                       gradient = FALSE,
-                       floating = FALSE,
-                       argonRow(
-                         argonColumn(width = 6,
-                                     radioButtons(
-                                       "dist",
-                                       "Distribution type:",
-                                       c(
-                                         "Normal" = "norm",
-                                         "Uniform" = "unif",
-                                         "Log-normal" = "lnorm",
-                                         "Exponential" = "exp"
-                                       )
-                                     )),
-                         argonColumn(width = 6, plotOutput("plot"))
-                       )
-                     )
-                   )),
+      argonTabItem(
+        tabName = "eda",
+        argonTabSet(
+          id = "tab-1",
+          card_wrapper = TRUE,
+          horizontal = TRUE,
+          circle = FALSE,
+          size = "sm",
+          width = 12,
+          iconList = NULL,
+          
+          ### Boxplot ----
+          
+          argonTab(
+            tabName = "Boxplot",
+            active = TRUE,
+            argonRow(
+              argonColumn(
+                width = 3,
+                selectInput(
+                  inputId = "boxplotVar",
+                  label = "Variable: ",
+                  choices = colnames(df.senso)[4:dim(df.senso)[2]]
+                ),
+                selectInput(
+                  inputId = "boxplotFactor",
+                  label = "Factor:",
+                  choices = colnames(df.senso)[1:3]
+                )
+              ),
+              argonColumn(
+                center = T,
+                width = 9,
+                plotlyOutput("boxPlot", height = "100%")%>% 
+                  withSpinner(color="#5e72e4", type=7, proxy.height = "400px")
+              )
+            )
+          )
+          
+        )
+        
+      ),
       
       
       ## PCA ----
@@ -104,7 +112,7 @@ shiny::shinyApp(
       argonTabItem(
         tabName = "pca",
         argonTabSet(
-          id = "tab-1",
+          id = "tab-2",
           card_wrapper = TRUE,
           horizontal = TRUE,
           circle = FALSE,
@@ -130,7 +138,8 @@ shiny::shinyApp(
               argonColumn(
                 center = T,
                 width = 9,
-                plotOutput("screePlot", height = "100%")
+                plotOutput("screePlot", height = "100%")%>% 
+                  withSpinner(color="#5e72e4", type=7, proxy.height = "600px")
               )
             )
           ),
@@ -209,8 +218,18 @@ shiny::shinyApp(
   
   
   
-  # Server
+  # Server ----
   server = function(input, output) {
+    
+    ## Boxplot ----
+    
+    output$boxPlot <-  renderPlotly({
+      plot_ly(data=df.senso,
+              x=df.senso[[input$boxplotVar]],
+              color=df.senso[[input$boxplotFactor]],
+              colors="RdYlBu",
+              type="box")
+    })
     
     ## Scree plot ----
     
@@ -272,7 +291,6 @@ shiny::shinyApp(
       ) + theme_light()
     }, height = 600, width = 600)
     
-  
   }
   
 )

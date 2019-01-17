@@ -10,7 +10,7 @@ library(magrittr) # %>%
 
 # Load data ----
 df.hedo = read.csv("hedo.csv",sep=';')
-df.senso = read.csv("sens.csv")
+df.senso = read.csv("senso.csv")
 
 # Convert seance, juge, produit to factors ----
 df.senso$seance = as.factor(df.senso$seance)
