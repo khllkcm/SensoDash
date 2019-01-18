@@ -100,6 +100,34 @@ shiny::shinyApp(
                   withSpinner(color="#5e72e4", type=7, proxy.height = "400px")
               )
             )
+          ),
+          
+          ### ANOVA ----
+          argonTab(
+            tabName = "ANOVA",
+            active = FALSE,
+            argonRow(
+              argonColumn(
+                width = 3,
+                selectInput(
+                  inputId = "anovaVar",
+                  label = "Variable: ",
+                  choices = colnames(df.senso)[4:dim(df.senso)[2]]
+                ),
+                selectInput(
+                  inputId = "anovaFactors",
+                  label = "Factor:",
+                  choices = colnames(df.senso)[1:3],
+                  multiple = TRUE
+                )
+              ),
+              argonColumn(
+                center = T,
+                width = 9,
+                verbatimTextOutput("anova")%>% 
+                  withSpinner(color="#5e72e4", type=7, proxy.height = "400px")
+              )
+            )
           )
           
         )
@@ -220,6 +248,17 @@ shiny::shinyApp(
   
   # Server ----
   server = function(input, output) {
+    
+    
+    ## ANOVA ----
+    
+    anovaFactors = reactive({
+      req(input$anovaFactors)
+    })
+    
+    output$anova = renderPrint({
+      summary(aov(as.formula(paste(input$anovaVar," ~ ",paste(anovaFactors(),collapse="*"))),data=df.senso))
+    })
     
     ## Boxplot ----
     
