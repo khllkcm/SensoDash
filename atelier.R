@@ -73,9 +73,8 @@ sapply(objs.lm, function(x){return(x$coefficients)}) %>% t
 
 
 # Different format ----
-
+exp_vars = colnames(df.Y)[(dim(df.Y)[2] - x + 1):dim(df.Y)[2]]
+formula = as.formula(paste("Score", paste(exp_vars, collapse = "+"), sep = "~"))
 df.Y.tidy = df.Y %>% gather(Consumer,Score,F1:P144)
 df.Y.tidy$Consumer=factor(df.Y.tidy$Consumer, levels=unique(df.Y.tidy$Consumer))
-objs.lm2 = dlply(df.Y.tidy, .(Consumer), function(x) lm(Score ~ Dim.1+Dim.2, data = x))
-
-# sort consumers
+objs.lm2 = dlply(df.Y.tidy, .(Consumer), function(x) lm(formula, data = x))
