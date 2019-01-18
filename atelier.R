@@ -7,6 +7,8 @@ library(broom) # Better summaries
 library(FactoMineR) # PCA
 library(factoextra) # ggplot2 PCA plots
 library(magrittr) # %>%
+library(tidyr) # organizing data  
+library(plyr) # applying functions
 
 # Load data ----
 df.hedo = read.csv("hedo.csv",sep=';')
@@ -55,11 +57,8 @@ for (i in 2:(dim(df.Y)[2] - x)) {
   # Get the name of the response variable, i.e. the consumer at hand
   res_var = colnames(df.Y)[i]
   # Use the names to create a formula
-  formula = as.formula(paste(res_var, 
-    paste(
-    exp_vars = colnames(df.Y)[(dim(df.Y)[2] - x + 1):dim(df.Y)[2]],
-    collapse = "+"),
-                      sep = "~"))
+  formula = as.formula(paste(
+    res_var, paste(exp_vars, collapse = "+"), sep = "~"))
   # Use the formula to fit the model
   model = lm(formula, data = df.Y)
   # Store the model as a list for easy access
@@ -71,3 +70,12 @@ for (i in 2:(dim(df.Y)[2] - x)) {
 glance(objs.lm[[1]])
 
 sapply(objs.lm, function(x){return(x$coefficients)}) %>% t
+
+
+# Different format ----
+
+df.Y.tidy = df.Y %>% gather(Consumer,Score,F1:P144)
+df.Y.tidy$Consumer=factor(df.Y.tidy$Consumer, levels=unique(df.Y.tidy$Consumer))
+objs.lm2 = dlply(df.Y.tidy, .(Consumer), function(x) lm(Score ~ Dim.1+Dim.2, data = x))
+
+# sort consumers
