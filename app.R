@@ -3,6 +3,7 @@ library(argonR)
 library(argonDash)
 library(shinycssloaders)
 library(plotly)
+library(DT)
 
 setwd("~/School/Atelier/")
 source("atelier.R")
@@ -29,6 +30,12 @@ shiny::shinyApp(
       dropdownMenus =
         argonSidebarHeader(title = "Main Menu"),
       argonSidebarMenu(
+        argonSidebarItem(
+          tabName = "data",
+          icon = "single-copy-04",
+          icon_color = "info",
+          "Upload Datasets"
+        ),
         argonSidebarItem(
           tabName = "eda",
           icon = "chart-pie-35",
@@ -62,11 +69,106 @@ shiny::shinyApp(
     
     body = argonDashBody(argonTabItems(
       
+      ## Datasets ----
+      argonTabItem(
+        tabName = "data",
+        argonTabSet(
+          id = "tab-1",
+          card_wrapper = TRUE,
+          horizontal = TRUE,
+          circle = FALSE,
+          size = "sm",
+          width = 12,
+          iconList = NULL,
+          
+          ### Hedo dataset ----
+          
+          argonTab(
+            tabName = "Hedo dataset",
+            active = TRUE,
+            argonRow(
+              argonColumn(
+                width = 3,
+                fileInput("fileHedo", "Choose CSV File",
+                          multiple = TRUE,
+                          accept = c("text/csv",
+                                     "text/comma-separated-values,text/plain",
+                                     ".csv")),
+                checkboxInput("headerHedo", "Header", TRUE),
+                radioButtons("sepHedo", "Separator",
+                             choices = c(Comma = ",",
+                                         Semicolon = ";",
+                                         Tab = "\t"),
+                             selected = ";"),
+                radioButtons("quoteHedo", "Quote",
+                             choices = c(None = "",
+                                         "Double Quote" = '"',
+                                         "Single Quote" = "'"),
+                             selected = '"'),
+                radioButtons("dispHedo", "Display",
+                             choices = c(Head = "head",
+                                         All = "all"),
+                             selected = "head")
+                
+              ),
+              argonColumn(
+                center = T,
+                width = 9,
+                div(style = 'overflow-x: scroll',
+                    dataTableOutput("contentsHedo")%>% 
+                  withSpinner(color="#5e72e4", type=7, proxy.height = "400px"))
+              )
+            )
+          ),
+          
+          ### Sensory dataset ----
+          argonTab(
+            tabName = "Sensory dataset",
+            active = FALSE,
+            argonRow(
+              argonColumn(
+                width = 3,
+                fileInput("fileSenso", "Choose CSV File",
+                          multiple = TRUE,
+                          accept = c("text/csv",
+                                     "text/comma-separated-values,text/plain",
+                                     ".csv")),
+                checkboxInput("headerSenso", "Header", TRUE),
+                radioButtons("sepSenso", "Separator",
+                             choices = c(Comma = ",",
+                                         Semicolon = ";",
+                                         Tab = "\t"),
+                             selected = ","),
+                radioButtons("quoteSenso", "Quote",
+                             choices = c(None = "",
+                                         "Double Quote" = '"',
+                                         "Single Quote" = "'"),
+                             selected = '"'),
+                radioButtons("dispSenso", "Display",
+                             choices = c(Head = "head",
+                                         All = "all"),
+                             selected = "head")
+                
+              ),
+              argonColumn(
+                center = T,
+                width = 9,
+                div(style = 'overflow-x: scroll',
+                    dataTableOutput("contentsSenso")%>% 
+                      withSpinner(color="#5e72e4", type=7, proxy.height = "400px"))
+              )
+            )
+          )
+          
+        )
+        
+      ),
+      
       ## EDA ----
       argonTabItem(
         tabName = "eda",
         argonTabSet(
-          id = "tab-1",
+          id = "tab-2",
           card_wrapper = TRUE,
           horizontal = TRUE,
           circle = FALSE,
@@ -140,7 +242,7 @@ shiny::shinyApp(
       argonTabItem(
         tabName = "pca",
         argonTabSet(
-          id = "tab-2",
+          id = "tab-3",
           card_wrapper = TRUE,
           horizontal = TRUE,
           circle = FALSE,
@@ -249,6 +351,42 @@ shiny::shinyApp(
   # Server ----
   server = function(input, output) {
     
+    ## Dataset Hedo ----
+    output$contentsHedo <- renderDataTable({
+      
+      req(input$fileHedo)
+      
+      df <- read.csv(input$fileHedo$datapath,
+                     header = input$headerHedo,
+                     sep = input$sepHedo,
+                     quote = input$quoteHedo)
+      
+      if(input$dispHedo == "head") {
+        return(head(df))
+      }
+      else {
+        return(df)
+      }
+      
+    })
+    
+    ## Dataset Senso ----
+    output$contentsSenso <- renderDataTable({
+      req(input$fileSenso)
+      
+      df <- read.csv(input$fileSenso$datapath,
+                     header = input$headerSenso,
+                     sep = input$sepSenso,
+                     quote = input$quoteSenso)
+      
+      if(input$dispSenso == "head") {
+        return(head(df))
+      }
+      else {
+        return(df)
+      }
+      
+    })
     
     ## ANOVA ----
     
