@@ -8,7 +8,6 @@ library(FactoMineR)
 library(factoextra)
 
 setwd("~/School/Atelier/")
-#source("atelier.R")
 
 options(shiny.trace = F)
 
@@ -97,33 +96,53 @@ shiny::shinyApp(
                              "text/comma-separated-values,text/plain",
                              ".csv")
                 ),
-                checkboxInput("headerHedo", "Header", TRUE),
-                radioButtons(
-                  "sepHedo",
-                  "Separator",
-                  choices = c(
-                    Comma = ",",
-                    Semicolon = ";",
-                    Tab = "\t"
+                argonRow(
+                  argonColumn(
+                    width = 6,
+                    radioButtons(
+                      "sepHedo",
+                      "Separator",
+                      choices = c(
+                        Comma = ",",
+                        Semicolon = ";",
+                        Tab = "\t"
+                      ),
+                      selected = ";"
+                    )
                   ),
-                  selected = ";"
+                  argonColumn(
+                    width = 6,
+                    radioButtons(
+                      "quoteHedo",
+                      "Quote",
+                      choices = c(
+                        None = "",
+                        "Double Quote" = '"',
+                        "Single Quote" = "'"
+                      ),
+                      selected = '"'
+                    )
+                  )
                 ),
-                radioButtons(
-                  "quoteHedo",
-                  "Quote",
-                  choices = c(
-                    None = "",
-                    "Double Quote" = '"',
-                    "Single Quote" = "'"
+                
+                argonRow(
+                  argonColumn(
+                    width = 6,
+                    tags$head(tags$style(
+                      HTML(".control-label {margin-bottom: 1.5rem;}")
+                    )),
+                    checkboxInput("headerHedo", "Header", TRUE)
                   ),
-                  selected = '"'
-                ),
-                radioButtons(
-                  "dispHedo",
-                  "Display",
-                  choices = c(Head = "head",
-                              All = "all"),
-                  selected = "head"
+                  argonColumn(
+                    width = 6,
+                    radioButtons(
+                      "dispHedo",
+                      "Display",
+                      choices = c(Head = "head",
+                                  All = "all"),
+                      selected = "head"
+                    )
+                  )
                 )
                 
               ),
@@ -158,33 +177,48 @@ shiny::shinyApp(
                              "text/comma-separated-values,text/plain",
                              ".csv")
                 ),
-                checkboxInput("headerSenso", "Header", TRUE),
-                radioButtons(
-                  "sepSenso",
-                  "Separator",
-                  choices = c(
-                    Comma = ",",
-                    Semicolon = ";",
-                    Tab = "\t"
+                argonRow(
+                  argonColumn(
+                    width = 6,
+                    radioButtons(
+                      "sepSenso",
+                      "Separator",
+                      choices = c(
+                        Comma = ",",
+                        Semicolon = ";",
+                        Tab = "\t"
+                      ),
+                      selected = ";"
+                    )
                   ),
-                  selected = ","
+                  argonColumn(
+                    width = 6,
+                    radioButtons(
+                      "quoteSenso",
+                      "Quote",
+                      choices = c(
+                        None = "",
+                        "Double Quote" = '"',
+                        "Single Quote" = "'"
+                      ),
+                      selected = '"'
+                    )
+                  )
                 ),
-                radioButtons(
-                  "quoteSenso",
-                  "Quote",
-                  choices = c(
-                    None = "",
-                    "Double Quote" = '"',
-                    "Single Quote" = "'"
-                  ),
-                  selected = '"'
-                ),
-                radioButtons(
-                  "dispSenso",
-                  "Display",
-                  choices = c(Head = "head",
-                              All = "all"),
-                  selected = "head"
+                
+                argonRow(
+                  argonColumn(width = 6,
+                              checkboxInput("headerSenso", "Header", TRUE)),
+                  argonColumn(
+                    width = 6,
+                    radioButtons(
+                      "dispSenso",
+                      "Display",
+                      choices = c(Head = "head",
+                                  All = "all"),
+                      selected = "head"
+                    )
+                  )
                 ),
                 uiOutput("selectSensoSession"),
                 uiOutput("selectSensoJudge"),
@@ -482,7 +516,12 @@ shiny::shinyApp(
       req(input$sensoSession)
       req(input$sensoJudge)
       req(input$sensoProduct)
-      df = df.sensoForDisplay()
+      df = read.csv(
+        input$fileSenso$datapath,
+        header = input$headerSenso,
+        sep = input$sepSenso,
+        quote = input$quoteSenso
+      )
       df[[input$sensoSession]] = as.factor(df[[input$sensoSession]])
       df[[input$sensoJudge]] = as.factor(df[[input$sensoJudge]])
       df[[input$sensoProduct]] = as.factor(df[[input$sensoProduct]])
@@ -556,13 +595,13 @@ shiny::shinyApp(
     obj.pca = reactive({
       df.X = summaryBy(
         as.formula(paste(". ~ ", input$sensoProduct)),
-        data = df.senso()[,-which(names(df.senso()) %in% c(input$sensoSession, input$sensoJudge))],
+        data = df.senso()[, -which(names(df.senso()) %in% c(input$sensoSession, input$sensoJudge))],
         FUN = c(mean),
         na.rm = T,
         keep.names = T
       )
       rownames(df.X) = df.X[, 1]
-      res.pca = PCA(df.X[,-1], scale.unit = F, graph = F)
+      res.pca = PCA(df.X[, -1], scale.unit = F, graph = F)
       return(res.pca)
     })
     
