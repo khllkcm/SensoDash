@@ -104,11 +104,7 @@ shiny::shinyApp(
                              choices = c(None = "",
                                          "Double Quote" = '"',
                                          "Single Quote" = "'"),
-                             selected = '"'),
-                radioButtons("dispHedo", "Display",
-                             choices = c(Head = "head",
-                                         All = "all"),
-                             selected = "head")
+                             selected = '"')
                 
               ),
               argonColumn(
@@ -144,11 +140,9 @@ shiny::shinyApp(
                                          "Double Quote" = '"',
                                          "Single Quote" = "'"),
                              selected = '"'),
-                radioButtons("dispSenso", "Display",
-                             choices = c(Head = "head",
-                                         All = "all"),
-                             selected = "head")
-                
+                uiOutput("selectSensoSession"),
+                uiOutput("selectSensoJudge"),
+                uiOutput("selectSensoProduct")
               ),
               argonColumn(
                 center = T,
@@ -184,17 +178,8 @@ shiny::shinyApp(
             argonRow(
               argonColumn(
                 width = 3,
-                selectInput(
-                  inputId = "boxplotVar",
-                  label = "Variable: ",
-                  choices = colnames(df.senso)[4:dim(df.senso)[2]]
-                ),
-                selectInput(
-                  inputId = "boxplotFactor",
-                  label = "Factor:",
-                  choices = colnames(df.senso)[1:3]
-                )
-              ),
+                uiOutput("selectBoxplotVar"),
+                uiOutput("selectBoxplotFactor")),
               argonColumn(
                 center = T,
                 width = 9,
@@ -211,17 +196,8 @@ shiny::shinyApp(
             argonRow(
               argonColumn(
                 width = 3,
-                selectInput(
-                  inputId = "anovaVar",
-                  label = "Variable: ",
-                  choices = colnames(df.senso)[4:dim(df.senso)[2]]
-                ),
-                selectInput(
-                  inputId = "anovaFactors",
-                  label = "Factor:",
-                  choices = colnames(df.senso)[1:3],
-                  multiple = TRUE
-                )
+                uiOutput("selectAnovaVar"),
+                uiOutput("selectAnovaFactors")
               ),
               argonColumn(
                 center = T,
@@ -352,58 +328,120 @@ shiny::shinyApp(
   server = function(input, output) {
     
     ## Dataset Hedo ----
-    output$contentsHedo <- renderDataTable({
-      
+    df.hedo = reactive({
       req(input$fileHedo)
-      
       df <- read.csv(input$fileHedo$datapath,
                      header = input$headerHedo,
                      sep = input$sepHedo,
                      quote = input$quoteHedo)
-      
-      if(input$dispHedo == "head") {
-        return(head(df))
-      }
-      else {
-        return(df)
-      }
-      
+      return(df)
     })
     
+    ## Display Dataset Hedo ----
+    output$contentsHedo <- renderDataTable({
+      df.hedo()
+    },options = list(processing = FALSE))
+    
     ## Dataset Senso ----
-    output$contentsSenso <- renderDataTable({
+    
+    output$selectSensoSession = renderUI(selectInput(
+      inputId = "sensoSession",
+      label = "Session:",
+      choices = colnames(df.senso_initial()),
+      selected = colnames(df.senso_initial())[1]
+    ))
+    
+    output$selectSensoJudge = renderUI(selectInput(
+      inputId = "sensoJudge",
+      label = "Judge:",
+      choices = colnames(df.senso_initial()),
+      selected = colnames(df.senso_initial())[2]
+    ))
+    
+    output$selectSensoProduct = renderUI(selectInput(
+      inputId = "sensoProduct",
+      label = "Product:",
+      choices = colnames(df.senso_initial()),
+      selected = colnames(df.senso_initial())[3]
+    ))
+    
+    df.senso_initial = reactive({
       req(input$fileSenso)
-      
       df <- read.csv(input$fileSenso$datapath,
                      header = input$headerSenso,
                      sep = input$sepSenso,
                      quote = input$quoteSenso)
       
-      if(input$dispSenso == "head") {
-        return(head(df))
-      }
-      else {
-        return(df)
-      }
-      
+      return(df)
     })
     
+    df.senso = reactive(({
+      req(input$sensoSession)
+      req(input$sensoJudge)
+      req(input$sensoProduct)
+      df = df.senso_initial()
+      df[[input$sensoSession]] = as.factor(df[[input$sensoSession]])
+      df[[input$sensoJudge]] = as.factor(df[[input$sensoJudge]])
+      df[[input$sensoProduct]] = as.factor(df[[input$sensoProduct]])
+      return(df)
+    }))
+    
+    ## Display Dataset Senso ----
+    output$contentsSenso <- renderDataTable({
+      df.senso_initial()
+    },options = list(processing = FALSE))
+    
     ## ANOVA ----
+    output$selectAnovaVar = renderUI(selectInput(
+      inputId = "anovaVar",
+      label = "Variable: ",
+      choices = names(Filter(is.numeric, df.senso()))
+    ))
+    
+    output$selectAnovaFactors = renderUI(
+      selectInput(
+        inputId = "anovaFactors",
+        label = "Factor:",
+        choices = names(Filter(is.factor, df.senso())),
+        multiple = TRUE
+      ))
     
     anovaFactors = reactive({
       req(input$anovaFactors)
     })
     
     output$anova = renderPrint({
-      summary(aov(as.formula(paste(input$anovaVar," ~ ",paste(anovaFactors(),collapse="*"))),data=df.senso))
+      summary(aov(as.formula(paste(input$anovaVar," ~ ",paste(anovaFactors(),collapse="*"))),data=df.senso()))
     })
     
     ## Boxplot ----
     
+    output$selectBoxplotVar = renderUI(selectInput(
+      inputId = "boxplotVar",
+      label = "Variable: ",
+      choices = names(Filter(is.numeric, df.senso()))
+    ))
+    
+    output$selectBoxplotFactor = renderUI(
+      selectInput(
+        inputId = "boxplotFactor",
+        label = "Factor:",
+        choices = names(Filter(is.factor, df.senso()))
+      )
+    )
+    
+    boxplotVar = reactive({
+      req(input$boxplotVar)
+    })
+    
+    boxplotFactor = reactive({
+      req(input$boxplotFactor)
+    })
+    
     output$boxPlot <-  renderPlotly({
-      plot_ly(data=df.senso,
-              x=df.senso[[input$boxplotVar]],
-              color=df.senso[[input$boxplotFactor]],
+      plot_ly(data=df.senso(),
+              x=df.senso()[[boxplotVar()]],
+              color=df.senso()[[boxplotFactor()]],
               colors="RdYlBu",
               type="box")
     })
