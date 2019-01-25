@@ -4,6 +4,7 @@ library(argonDash)
 library(shinycssloaders)
 library(plotly)
 library(DT)
+library(doBy)
 library(FactoMineR)
 library(factoextra)
 
@@ -188,7 +189,7 @@ shiny::shinyApp(
                         Semicolon = ";",
                         Tab = "\t"
                       ),
-                      selected = ";"
+                      selected = ","
                     )
                   ),
                   argonColumn(
