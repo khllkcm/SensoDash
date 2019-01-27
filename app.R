@@ -19,7 +19,7 @@ shiny::shinyApp(
     author = "Khalil",
     description = "Dash Board",
     
-    # Sidebar -----
+    # Sidebar ----
     
     sidebar = argonDashSidebar(
       skin = "light",
@@ -68,7 +68,12 @@ shiny::shinyApp(
     
     # Body ----
     
-    body = argonDashBody(argonTabItems(
+    body = argonDashBody(
+      ## CSS ----
+      tags$head(tags$style(
+        HTML(".control-label {margin-bottom: 1.5rem;} .progress {height: 20px;} .btn{padding:0.7rem 1.25rem;} .input-group .form-control:not(:first-child){padding-left:10px;}")
+      )),
+      argonTabItems(
       ## Datasets ----
       argonTabItem(
         tabName = "data",
@@ -129,9 +134,6 @@ shiny::shinyApp(
                 argonRow(
                   argonColumn(
                     width = 6,
-                    tags$head(tags$style(
-                      HTML(".control-label {margin-bottom: 1.5rem;}")
-                    )),
                     checkboxInput("headerHedo", "Header", TRUE)
                   ),
                   argonColumn(
@@ -442,7 +444,8 @@ shiny::shinyApp(
         input$fileHedo$datapath,
         header = input$headerHedo,
         sep = input$sepHedo,
-        quote = input$quoteHedo
+        quote = input$quoteHedo,
+        row.names = 1
       )
       if (input$dispHedo == "head") {
         return(head(df))
@@ -601,8 +604,8 @@ shiny::shinyApp(
         na.rm = T,
         keep.names = T
       )
-      rownames(df.X) = df.X[, 1]
-      res.pca = PCA(df.X[, -1], scale.unit = F, graph = F)
+      rownames(df.X) = df.hedo()[, 1]
+      res.pca = PCA(df.X[, -1], graph = F)
       return(res.pca)
     })
     
