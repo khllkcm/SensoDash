@@ -5,10 +5,11 @@ library(shinycssloaders)
 library(plotly)
 library(DT)
 library(doBy)
-library(FactoMineR)
 library(factoextra)
 
+
 setwd("~/School/Atelier/")
+source("functions.R")
 
 options(shiny.trace = F)
 
@@ -48,6 +49,12 @@ shiny::shinyApp(
           icon = "chart-bar-32",
           icon_color = "warning",
           "Principle Component Analysis"
+        ),
+        argonSidebarItem(
+          tabName = "pred",
+          icon = "chart-bar-32",
+          icon_color = "warning",
+          "Score Prediction Map"
         )
       )
     ),
@@ -91,6 +98,7 @@ shiny::shinyApp(
           argonTab(
             tabName = "Hedonic dataset",
             active = TRUE,
+            
             argonRow(
               argonColumn(
                 width = 3,
@@ -422,10 +430,52 @@ shiny::shinyApp(
               )
             )
           )
+          
         )
         
+      ),
+      ## Pred ----
+      argonTabItem(
+        tabName = "pred",
+        argonTabSet(
+          id = "tab-4",
+          card_wrapper = TRUE,
+          horizontal = TRUE,
+          circle = FALSE,
+          size = "sm",
+          width = 12,
+          iconList = NULL,
+          argonTab(
+            tabName = "Score Prediction Map",
+            active = TRUE,
+            argonRow(
+              argonColumn(
+                width = 2,
+                selectInput(
+                  "modelFormula",
+                  label = "Formula",
+                  choices = c("Vector", "Circular", "Elliptic","Quadratic"),
+                  selected = "Quadratic"
+                )
+              ),
+              argonColumn(
+                width = 10,
+                center=T,
+                plotOutput("mapPlot", height = "100%") %>%
+                  withSpinner(
+                    color = "#5e72e4",
+                    type = 7,
+                    proxy.height = "600px"
+                  )
+              )
+            )
+          )
+        )
       )
+      
+      
     )),
+    
     
     # Footer ----
     
@@ -461,7 +511,8 @@ shiny::shinyApp(
         input$fileHedo$datapath,
         header = input$headerHedo,
         sep = input$sepHedo,
-        quote = input$quoteHedo
+        quote = input$quoteHedo,
+        row.names = 1
       )
       return(df)
     })
@@ -597,16 +648,9 @@ shiny::shinyApp(
     
     ## PCA ----
     obj.pca = reactive({
-      df.X = summaryBy(
-        as.formula(paste(". ~ ", input$sensoProduct)),
-        data = df.senso()[, -which(names(df.senso()) %in% c(input$sensoSession, input$sensoJudge))],
-        FUN = c(mean),
-        na.rm = T,
-        keep.names = T
-      )
-      rownames(df.X) = df.hedo()[, 1]
-      res.pca = PCA(df.X[, -1], graph = F)
-      return(res.pca)
+      res.PCA=getPCA(df.senso())
+      if(!is.null(input$fileHedo))rownames(res.PCA$ind$coord) = rownames(df.hedo())
+      return(res.PCA)
     })
     
     ## Scree plot ----
@@ -659,7 +703,7 @@ shiny::shinyApp(
     })
     
     
-    output$biPlot =    renderPlot({
+    output$biPlot = renderPlot({
       fviz_pca_biplot(
         obj.pca(),
         repel = T,
@@ -670,6 +714,28 @@ shiny::shinyApp(
       ) + theme_light()
     }, height = 600, width = 600)
     
+    ## Pred Map ----
+    
+    mapBisc <- reactive({
+      mapWithPCA(df.senso(), df.hedo())
+    })
+    
+    fittedModels <- reactive({
+      fitModel(mapBisc(), formula = input$modelFormula)
+    })
+    
+    discreteSpace = reactive({
+      makeGrid(mapBisc(), 50)
+    })
+    
+    predictedScores = reactive({
+      sapply(fittedModels(), predict, newdata = discreteSpace()) %>% 
+        as.data.frame()
+      })
+    
+    output$mapPlot = renderPlot({
+      plotMap(predictedScores()[[1]], mapBisc(), discreteSpace(), plot.contour = F)
+    }, height = 600, width = 600)
   }
   
 )
