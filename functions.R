@@ -6,7 +6,7 @@ library(reshape2)
 library(plyr)
 library(tibble)
 library(metR)
-
+library(fields)
 
 getPCA = function(df.senso) {
   df.X = summaryBy(
@@ -101,7 +101,9 @@ plotMap = function(predictedScore,
                    contour.col = "white",
                    prod.col = "white",
                    show.prods = F,
-                   interpolate=T) {
+                   interpolate=T,
+                   nbpoints=50,
+                   plot.3D = F) {
   legendBreaks =  if (max(predictedScore) == 1) c(0, 1) else seq(0, 100, by = 10)
   contourBreaks = seq(to = 100, by = contour.step)
   if (type != "preference") {
@@ -142,8 +144,10 @@ plotMap = function(predictedScore,
       size = 5
     )
   }
-  #mba.int <- MBA::mba.surf(cbind(discreteSpace,predictedScore), 600, 600, extend=F)$xyz.est
-  #plot=fields::image.plot(mba.int)
+  if(plot.3D){
+    image=as.image(Z=predictedScore,x=discreteSpace,nx=nbpoints,ny=nbpoints)
+    plot = plot_ly(x=image$x,y=image$y,z = image$z, type="surface",height=600)
+  }
   return(plot)
 }
 
