@@ -52,10 +52,10 @@ shiny::shinyApp(
           "Principle Component Analysis"
         ),
         argonSidebarItem(
-          tabName = "pred",
-          icon = "chart-bar-32",
-          icon_color = "warning",
-          "Score Prediction Map"
+          tabName = "maps",
+          icon = "map-big",
+          icon_color = "default",
+          "Maps"
         )
       )
     ),
@@ -435,9 +435,9 @@ shiny::shinyApp(
           )
           
         ),
-        ## Pred ----
+        ## Maps ----
         argonTabItem(
-          tabName = "pred",
+          tabName = "maps",
           argonTabSet(
             id = "tab-4",
             card_wrapper = TRUE,
@@ -446,20 +446,21 @@ shiny::shinyApp(
             size = "sm",
             width = 12,
             iconList = NULL,
+            ## Prediction map ----
             argonTab(
               tabName = "Score Prediction Map",
               active = TRUE,
               argonRow(
                 argonColumn(
-                  width = 2,
+                  width = 3,
                   selectInput(
                     "modelFormula",
                     label = "Formula",
                     choices = c("Vector", "Circular", "Elliptic", "Quadratic"),
                     selected = "Quadratic"
                   ),
-                  
-                  checkboxInput("pred3D", "3D Plot", TRUE),
+                  checkboxInput("predTrim", "Trim values outside range", TRUE),
+                  checkboxInput("pred3D", "3D Plot", FALSE),
                   conditionalPanel(
                     condition = "!input.pred3D",
                     numericInput(
@@ -475,6 +476,7 @@ shiny::shinyApp(
                     numericInput("predContourStep", "Contour Step", 1.5, min =
                                    0.25),
                     checkboxInput("predShowProds", "Show Products", FALSE),
+                    checkboxInput("predShowProdDots", "Show Product Points", FALSE),
                     colourInput(
                       inputId = "predContourColor",
                       label = "Contour Color:",
@@ -490,7 +492,7 @@ shiny::shinyApp(
                   )
                 ),
                 argonColumn(
-                  width = 10,
+                  width = 9,
                   center = T,
                   conditionalPanel(
                     condition = "!input.pred3D",
@@ -504,6 +506,76 @@ shiny::shinyApp(
                   conditionalPanel(
                     condition = "input.pred3D",
                     plotlyOutput("mapPlotly", height = "1400px") %>%
+                      withSpinner(
+                        color = "#5e72e4",
+                        type = 7,
+                        proxy.height = "400px"
+                      )
+                  )
+                )
+                
+              )
+            ),
+            ## Preference map ----
+            argonTab(
+              tabName = "Preference Map",
+              active = FALSE,
+              argonRow(
+                argonColumn(
+                  width = 3,
+                  selectInput(
+                    "modelFormula",
+                    label = "Formula",
+                    choices = c("Vector", "Circular", "Elliptic", "Quadratic"),
+                    selected = "Quadratic"
+                  ),
+                  checkboxInput("prefTrim", "Trim values outside range", TRUE),
+                  checkboxInput("pref3D", "3D Plot", FALSE),
+                  conditionalPanel(
+                    condition = "!input.pref3D",
+                    numericInput(
+                      "prefNbPoints",
+                      "Number of points",
+                      50,
+                      min = 10,
+                      max = 150,
+                      step = 10
+                    ),
+                    checkboxInput("prefInterpolate", "Interpolate", TRUE),
+                    checkboxInput("prefContour", "Plot Contour", FALSE),
+                    numericInput("prefContourStep", "Contour Step", 1.5, min =
+                                   0.25),
+                    checkboxInput("prefShowProds", "Show Products", FALSE),
+                    checkboxInput("prefShowProdDots", "Show Product Points", FALSE),
+                    colourInput(
+                      inputId = "prefContourColor",
+                      label = "Contour Color:",
+                      palette = "limited",
+                      value = "black"
+                    ),
+                    colourInput(
+                      inputId = "prefProdColor",
+                      label = "Product Color:",
+                      palette = "limited",
+                      value = "white"
+                    )
+                  )
+                ),
+                argonColumn(
+                  width = 9,
+                  center = T,
+                  conditionalPanel(
+                    condition = "!input.pref3D",
+                    plotOutput("mapPrefPlot", height = "100%") %>%
+                      withSpinner(
+                        color = "#5e72e4",
+                        type = 7,
+                        proxy.height = "400px"
+                      )
+                  ),
+                  conditionalPanel(
+                    condition = "input.pref3D",
+                    plotlyOutput("mapPrefPlotly", height = "1400px") %>%
                       withSpinner(
                         color = "#5e72e4",
                         type = 7,
@@ -775,6 +847,12 @@ shiny::shinyApp(
         as.data.frame()
     })
     
+    preferences = reactive({mapply(function(x, y) {
+      as.numeric(x > mean(y))
+    }, predictedScores(), df.hedo()) %>% as.data.frame()})
+    
+    
+    
     output$mapPlot = renderPlot({
       req(input$predContourStep)
       req(input$predNbPoints)
@@ -782,9 +860,11 @@ shiny::shinyApp(
         predictedScores()%>%rowMeans(),
         mapBisc(),
         discreteSpace(),
+        trim.values = input$predTrim,
         plot.contour = input$predContour,
         plot.3D = input$pred3D,
         show.prods = input$predShowProds,
+        prod.points = input$predShowProdDots,
         interpolate = input$predInterpolate,
         contour.step = input$predContourStep,
         nbpoints = input$predNbPoints,
@@ -797,7 +877,38 @@ shiny::shinyApp(
       plotMap(predictedScores()%>%rowMeans(),
               mapBisc(),
               discreteSpace(),
+              trim.values = input$predTrim,
               plot.3D = input$pred3D)
+    })
+    
+    output$mapPrefPlot = renderPlot({
+      req(input$prefContourStep)
+      req(input$prefNbPoints)
+      plotMap(
+        100 * preferences() %>% rowMeans(),
+        mapBisc(),
+        discreteSpace(),
+        type = "preference",
+        trim.values = input$prefTrim,
+        plot.contour = input$prefContour,
+        plot.3D = input$pref3D,
+        show.prods = input$prefShowProds,
+        prod.points = input$prefShowProdDots,
+        interpolate = input$prefInterpolate,
+        contour.step = input$prefContourStep,
+        nbpoints = input$prefNbPoints,
+        contour.col = input$prefContourColor,
+        prod.col = input$prefProdColor
+      )
+    }, height = 600, width = 600)
+    
+    output$mapPrefPlotly = renderPlotly({
+      plotMap(100 * preferences() %>% rowMeans(),
+              mapBisc(),
+              discreteSpace(),
+              trim.values = input$prefTrim,
+              type = "preference",
+              plot.3D = input$pref3D)
     })
   }
   
