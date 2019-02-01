@@ -9,7 +9,7 @@ library(doBy)
 library(factoextra)
 
 
-setwd("~/School/Atelier/")
+#setwd("~/School/Atelier/")
 source("functions.R")
 
 options(shiny.trace = F)
