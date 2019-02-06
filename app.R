@@ -36,7 +36,7 @@ shiny::shinyApp(
         argonSidebarItem(
           tabName = "data",
           icon = "single-copy-04",
-          icon_color = "info",
+          icon_color = "default",
           "Upload Datasets"
         ),
         argonSidebarItem(
@@ -54,7 +54,7 @@ shiny::shinyApp(
         argonSidebarItem(
           tabName = "maps",
           icon = "map-big",
-          icon_color = "default",
+          icon_color = "info",
           "Maps"
         )
       )
@@ -80,7 +80,7 @@ shiny::shinyApp(
       ## CSS ----
       tags$head(tags$style(
         HTML(
-          ".control-label {margin-bottom: 1rem;} .progress {height: 20px;} .btn{padding:0.7rem 1.25rem;} .input-group .form-control:not(:first-child){padding-left:10px;}"
+          ".control-label {margin-bottom: 1rem;} .progress {height: 20px;} .btn{padding:0.7rem 1.25rem;} .input-group .form-control:not(:first-child){padding-left:10px;} .form-group{margin-bottom: 0.75rem;}"
         )
       )),
       useShinyalert(),
@@ -468,7 +468,7 @@ shiny::shinyApp(
                     selected = "Quadratic"
                   ),
                   selectInput(
-                    "trimAction",
+                    "trimActionPred",
                     label = "Out of Range Action",
                     choices = c("None", "Trim", "Project", "Bound"),
                     selected = "Trim"
@@ -490,17 +490,21 @@ shiny::shinyApp(
                                    0.25),
                     checkboxInput("predShowProds", "Show Products", FALSE),
                     checkboxInput("predShowProdDots", "Show Product Points", FALSE),
-                    colourInput(
-                      inputId = "predContourColor",
-                      label = "Contour Color:",
-                      palette = "limited",
-                      value = "black"
-                    ),
-                    colourInput(
-                      inputId = "predProdColor",
-                      label = "Product Color:",
-                      palette = "limited",
-                      value = "white"
+                    checkboxInput("predChangeColors", "Change Text Colors", FALSE),
+                    conditionalPanel(
+                      condition = "input.predChangeColors",
+                      colourInput(
+                        inputId = "predContourColor",
+                        label = "Contour Color:",
+                        palette = "limited",
+                        value = "black"
+                      ),
+                      colourInput(
+                        inputId = "predProdColor",
+                        label = "Product Color:",
+                        palette = "limited",
+                        value = "white"
+                      )
                     )
                   )
                 ),
@@ -518,7 +522,7 @@ shiny::shinyApp(
                   ),
                   conditionalPanel(
                     condition = "input.pred3D",
-                    plotlyOutput("mapPlotly", height = "1400px") %>%
+                    plotlyOutput("mapPlotly", height = "627px") %>%
                       withSpinner(
                         color = "#5e72e4",
                         type = 7,
@@ -542,6 +546,12 @@ shiny::shinyApp(
                     choices = c("Vector", "Circular", "Elliptic", "Quadratic"),
                     selected = "Quadratic"
                   ),
+                  selectInput(
+                    "trimActionPref",
+                    label = "Out of Range Action",
+                    choices = c("None", "Trim", "Project", "Bound"),
+                    selected = "Trim"
+                  ),
                   checkboxInput("pref3D", "3D Plot", FALSE),
                   conditionalPanel(
                     condition = "!input.pref3D",
@@ -559,17 +569,21 @@ shiny::shinyApp(
                                    0.25),
                     checkboxInput("prefShowProds", "Show Products", FALSE),
                     checkboxInput("prefShowProdDots", "Show Product Points", FALSE),
-                    colourInput(
-                      inputId = "prefContourColor",
-                      label = "Contour Color:",
-                      palette = "limited",
-                      value = "black"
-                    ),
-                    colourInput(
-                      inputId = "prefProdColor",
-                      label = "Product Color:",
-                      palette = "limited",
-                      value = "white"
+                    checkboxInput("prefChangeColors", "Change Text Colors", FALSE),
+                    conditionalPanel(
+                      condition = "input.prefChangeColors",
+                      colourInput(
+                        inputId = "prefContourColor",
+                        label = "Contour Color:",
+                        palette = "limited",
+                        value = "black"
+                      ),
+                      colourInput(
+                        inputId = "prefProdColor",
+                        label = "Product Color:",
+                        palette = "limited",
+                        value = "white"
+                      )
                     )
                   )
                 ),
@@ -587,7 +601,7 @@ shiny::shinyApp(
                   ),
                   conditionalPanel(
                     condition = "input.pref3D",
-                    plotlyOutput("mapPrefPlotly", height = "1400px") %>%
+                    plotlyOutput("mapPrefPlotly", height="627px") %>%
                       withSpinner(
                         color = "#5e72e4",
                         type = 7,
@@ -610,7 +624,7 @@ shiny::shinyApp(
   ),
   
   # Server ----
-  server = function(input, output) {
+  server = function(input, output, session) {
     ## Dataset Hedo ----
     
     df.hedoForDisplay = reactive({
@@ -650,7 +664,6 @@ shiny::shinyApp(
           'csv',
           'tsv'
         ), "Wrong file format. Try again!"))
-      print(file_ext(input$fileHedo$name))
       df <- read.csv(
         input$fileHedo$datapath,
         header = input$headerHedo,
@@ -894,20 +907,16 @@ shiny::shinyApp(
     
     predictedScores = reactive({
       scores = sapply(fittedModels(), predict, newdata = discreteSpace()) %>%
-        as.data.frame() %>% trimValues(input$trimAction)
+        as.data.frame() %>% trimValues(input$trimActionPred)
       return(scores)
     })
-    
-    preferences = reactive({mapply(function(x, y) {
-      as.numeric(x > mean(y))
-    }, predictedScores(), df.hedo()) %>% as.data.frame()})
     
     qualityMessage = reactive({
       predictionQuality(predictedScores())
     })
     
     observeEvent(predictedScores(), {
-      if(input$trimAction=="None")
+      if(input$trimActionPred=="None")
       shinyalert(
         title = "Warning",
         text = qualityMessage(),
@@ -952,6 +961,40 @@ shiny::shinyApp(
     
     ## Pref Map ----
     
+    predictedScoresPref = reactive({
+      scores = sapply(fittedModels(), predict, newdata = discreteSpace()) %>%
+        as.data.frame() %>% trimValues(input$trimActionPref)
+      return(scores)
+    })
+    
+    preferences = reactive({
+      mapply(function(x, y) {
+        as.numeric(x > mean(y))
+      }, predictedScoresPref(), df.hedo()) %>% as.data.frame()})
+    
+    qualityMessage = reactive({
+      predictionQuality(predictedScoresPref())
+    })
+    
+    observeEvent(predictedScoresPref(), {
+      if(input$trimActionPref=="None")
+        shinyalert(
+          title = "Warning",
+          text = qualityMessage(),
+          closeOnEsc = TRUE,
+          closeOnClickOutside = TRUE,
+          html = FALSE,
+          type = "warning",
+          showConfirmButton = FALSE,
+          showCancelButton = FALSE,
+          timer = 5000,
+          imageUrl = "",
+          animation = TRUE
+        )
+    }
+    )
+    
+    
     output$mapPrefPlot = renderPlot({
       req(input$prefContourStep)
       req(input$prefNbPoints)
@@ -971,6 +1014,7 @@ shiny::shinyApp(
         prod.col = input$prefProdColor
       )
     }, height = 600, width = 600)
+    
     
     output$mapPrefPlotly = renderPlotly({
       plotMap(100 * preferences() %>% rowMeans(na.rm=T),
