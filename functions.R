@@ -75,7 +75,7 @@ fitModel = function(map,
   return(fittedModels)
 }
 
-trimValues = function(predictedScores, action='Project'){
+trimValues = function(predictedScores, action='Bound'){
   switch(action,
          'None' = {},
          'Trim' = {predictedScores[predictedScores>10]=NA; predictedScores[predictedScores<0]=NA},
