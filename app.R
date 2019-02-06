@@ -911,7 +911,7 @@ shiny::shinyApp(
       return(scores)
     })
     
-    qualityMessage = reactive({
+    qualityMessagePred = reactive({
       predictionQuality(predictedScores())
     })
     
@@ -919,7 +919,7 @@ shiny::shinyApp(
       if(input$trimActionPred=="None")
       shinyalert(
         title = "Warning",
-        text = qualityMessage(),
+        text = qualityMessagePred(),
         closeOnEsc = TRUE,
         closeOnClickOutside = TRUE,
         html = FALSE,
@@ -972,7 +972,7 @@ shiny::shinyApp(
         as.numeric(x > mean(y))
       }, predictedScoresPref(), df.hedo()) %>% as.data.frame()})
     
-    qualityMessage = reactive({
+    qualityMessagePref = reactive({
       predictionQuality(predictedScoresPref())
     })
     
@@ -980,7 +980,7 @@ shiny::shinyApp(
       if(input$trimActionPref=="None")
         shinyalert(
           title = "Warning",
-          text = qualityMessage(),
+          text = qualityMessagePref(),
           closeOnEsc = TRUE,
           closeOnClickOutside = TRUE,
           html = FALSE,
