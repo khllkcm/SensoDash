@@ -3,10 +3,10 @@ library(argonR)
 library(argonDash)
 library(shinycssloaders)
 library(colourpicker)
-library(plotly)
 library(DT)
 library(doBy)
 library(factoextra)
+library(shinyalert)
 
 
 #setwd("~/School/Atelier/")
@@ -80,9 +80,10 @@ shiny::shinyApp(
       ## CSS ----
       tags$head(tags$style(
         HTML(
-          ".control-label {margin-bottom: 1.5rem;} .progress {height: 20px;} .btn{padding:0.7rem 1.25rem;} .input-group .form-control:not(:first-child){padding-left:10px;}"
+          ".control-label {margin-bottom: 1rem;} .progress {height: 20px;} .btn{padding:0.7rem 1.25rem;} .input-group .form-control:not(:first-child){padding-left:10px;}"
         )
       )),
+      useShinyalert(),
       argonTabItems(
         ## Datasets ----
         argonTabItem(
@@ -447,6 +448,7 @@ shiny::shinyApp(
             width = 12,
             iconList = NULL,
             ## Prediction map ----
+            
             argonTab(
               tabName = "Score Prediction Map",
               active = TRUE,
@@ -459,7 +461,12 @@ shiny::shinyApp(
                     choices = c("Vector", "Circular", "Elliptic", "Quadratic"),
                     selected = "Quadratic"
                   ),
-                  checkboxInput("predTrim", "Trim values outside range", TRUE),
+                  selectInput(
+                    "trimAction",
+                    label = "Out of Range Action",
+                    choices = c("None", "Trim", "Project", "Bound"),
+                    selected = "Trim"
+                  ),
                   checkboxInput("pred3D", "3D Plot", FALSE),
                   conditionalPanel(
                     condition = "!input.pred3D",
@@ -529,7 +536,6 @@ shiny::shinyApp(
                     choices = c("Vector", "Circular", "Elliptic", "Quadratic"),
                     selected = "Quadratic"
                   ),
-                  checkboxInput("prefTrim", "Trim values outside range", TRUE),
                   checkboxInput("pref3D", "3D Plot", FALSE),
                   conditionalPanel(
                     condition = "!input.pref3D",
@@ -597,7 +603,7 @@ shiny::shinyApp(
     footer = NULL
   ),
   
-  
+  # Server ----
   server = function(input, output) {
     ## Dataset Hedo ----
     
@@ -843,24 +849,44 @@ shiny::shinyApp(
     })
     
     predictedScores = reactive({
-      sapply(fittedModels(), predict, newdata = discreteSpace()) %>%
-        as.data.frame()
+      scores = sapply(fittedModels(), predict, newdata = discreteSpace()) %>%
+        as.data.frame() %>% trimValues(input$trimAction)
+      return(scores)
     })
     
     preferences = reactive({mapply(function(x, y) {
       as.numeric(x > mean(y))
     }, predictedScores(), df.hedo()) %>% as.data.frame()})
     
+    qualityMessage = reactive({
+      predictionQuality(predictedScores())
+    })
     
+    observeEvent(predictedScores(), {
+      if(input$trimAction=="None")
+      shinyalert(
+        title = "Warning",
+        text = qualityMessage(),
+        closeOnEsc = TRUE,
+        closeOnClickOutside = TRUE,
+        html = FALSE,
+        type = "warning",
+        showConfirmButton = FALSE,
+        showCancelButton = FALSE,
+        timer = 5000,
+        imageUrl = "",
+        animation = TRUE
+      )
+      }
+    )
     
     output$mapPlot = renderPlot({
       req(input$predContourStep)
       req(input$predNbPoints)
       plotMap(
-        predictedScores()%>%rowMeans(),
+        predictedScores()%>%rowMeans(na.rm=T),
         mapBisc(),
         discreteSpace(),
-        trim.values = input$predTrim,
         plot.contour = input$predContour,
         plot.3D = input$pred3D,
         show.prods = input$predShowProds,
@@ -874,22 +900,22 @@ shiny::shinyApp(
     }, height = 600, width = 600)
     
     output$mapPlotly = renderPlotly({
-      plotMap(predictedScores()%>%rowMeans(),
+      plotMap(predictedScores()%>%rowMeans(na.rm=T),
               mapBisc(),
               discreteSpace(),
-              trim.values = input$predTrim,
               plot.3D = input$pred3D)
     })
+    
+    ## Pref Map ----
     
     output$mapPrefPlot = renderPlot({
       req(input$prefContourStep)
       req(input$prefNbPoints)
       plotMap(
-        100 * preferences() %>% rowMeans(),
+        100 * preferences() %>% rowMeans(na.rm=T),
         mapBisc(),
         discreteSpace(),
         type = "preference",
-        trim.values = input$prefTrim,
         plot.contour = input$prefContour,
         plot.3D = input$pref3D,
         show.prods = input$prefShowProds,
@@ -903,10 +929,9 @@ shiny::shinyApp(
     }, height = 600, width = 600)
     
     output$mapPrefPlotly = renderPlotly({
-      plotMap(100 * preferences() %>% rowMeans(),
+      plotMap(100 * preferences() %>% rowMeans(na.rm=T),
               mapBisc(),
               discreteSpace(),
-              trim.values = input$prefTrim,
               type = "preference",
               plot.3D = input$pref3D)
     })

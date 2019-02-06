@@ -7,6 +7,7 @@ library(plyr)
 library(tibble)
 library(metR)
 library(fields)
+library(plotly)
 
 getPCA = function(df.senso) {
   df.X = summaryBy(
@@ -74,7 +75,31 @@ fitModel = function(map,
   return(fittedModels)
 }
 
-#refactor with outer
+trimValues = function(predictedScores, action='Project'){
+  switch(action,
+         'None' = {},
+         'Trim' = {predictedScores[predictedScores>10]=NA; predictedScores[predictedScores<0]=NA},
+         'Project' = {predictedScores=apply(predictedScores,MARGIN = 2, FUN = function(x){(x-min(x))*10/(max(x)-min(x))})},
+         'Bound' = {predictedScores[predictedScores>10]=10;predictedScores[predictedScores<0]=0}
+          )
+  return(as.data.frame(predictedScores))
+}
+
+predictionQuality = function(predictedScores){
+  outOfBoundValueCount = predictedScores %>% apply(
+    MARGIN = 2,
+    FUN = function(x) {
+      length(na.exclude(x[x > 10])) + length(na.exclude(x[x < 0]))
+    }
+  ) %>% sum()
+  
+  msg = paste("There are",outOfBoundValueCount,"predicted values outside the score range, i.e.",
+                  paste0(round(100*outOfBoundValueCount/(ncol(predictedScores)*nrow(predictedScores)),2),"%.")
+  )
+  return(msg)
+}
+
+
 makeGrid = function(X, nbpoints = 50) {
   xMin = floor(min(X$PC1))
   yMin = floor(min(X$PC2))
@@ -95,7 +120,6 @@ makeGrid = function(X, nbpoints = 50) {
 plotMap = function(predictedScore,
                    mapBisc,
                    discreteSpace,
-                   trim.values=T,
                    type = "prediction",
                    plot.contour = F,
                    contour.step = 0.25,
@@ -109,10 +133,6 @@ plotMap = function(predictedScore,
   legendBreaks =  if (max(predictedScore) == 1) c(0, 1) else seq(0, 100, by = 10)
   contourBreaks = seq(to = 100, by = contour.step)
   if (type != "preference") {
-    if(trim.values){
-      predictedScore[predictedScore > 10] = 10
-      predictedScore[predictedScore < 0] = 0
-    }
     legendBreaks = if(diff(range(predictedScore))<2) seq(0,10) else seq(0,10, by=2)
     contourBreaks = seq(to = 10, by = contour.step)
   }
