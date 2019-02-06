@@ -7,7 +7,7 @@ library(DT)
 library(doBy)
 library(factoextra)
 library(shinyalert)
-
+library(tools)
 
 #setwd("~/School/Atelier/")
 source("functions.R")
@@ -110,9 +110,12 @@ shiny::shinyApp(
                     "fileHedo",
                     "Choose CSV File",
                     multiple = TRUE,
-                    accept = c("text/csv",
-                               "text/comma-separated-values,text/plain",
-                               ".csv")
+                    accept = c('text/csv',
+                               'text/comma-separated-values',
+                               'text/tab-separated-values',
+                               'text/plain',
+                               'csv',
+                               'tsv')
                   ),
                   argonRow(
                     argonColumn(
@@ -186,10 +189,13 @@ shiny::shinyApp(
                     "fileSenso",
                     "Choose CSV File",
                     multiple = TRUE,
-                    accept = c("text/csv",
-                               "text/comma-separated-values,text/plain",
-                               ".csv")
-                  ),
+                    accept = c('text/csv',
+                    'text/comma-separated-values',
+                    'text/tab-separated-values',
+                    'text/plain',
+                    'csv',
+                    'tsv')
+                ),
                   argonRow(
                     argonColumn(
                       width = 6,
@@ -609,6 +615,15 @@ shiny::shinyApp(
     
     df.hedoForDisplay = reactive({
       req(input$fileHedo)
+      validate(
+        need(file_ext(input$fileHedo$name) %in% c(
+          'text/csv',
+          'text/comma-separated-values',
+          'text/tab-separated-values',
+          'text/plain',
+          'csv',
+          'tsv'
+        ), "Wrong file format. Try again!"))
       df <- read.csv(
         input$fileHedo$datapath,
         header = input$headerHedo,
@@ -626,6 +641,16 @@ shiny::shinyApp(
     
     df.hedo = reactive({
       req(input$fileHedo)
+      validate(
+        need(file_ext(input$fileHedo$name) %in% c(
+          'text/csv',
+          'text/comma-separated-values',
+          'text/tab-separated-values',
+          'text/plain',
+          'csv',
+          'tsv'
+        ), "Wrong file format. Try again!"))
+      print(file_ext(input$fileHedo$name))
       df <- read.csv(
         input$fileHedo$datapath,
         header = input$headerHedo,
@@ -638,6 +663,7 @@ shiny::shinyApp(
     
     ## Display Dataset Hedo ----
     output$contentsHedo <- renderDataTable({
+      
       df.hedoForDisplay()
     }, options = list(processing = FALSE))
     
@@ -672,6 +698,15 @@ shiny::shinyApp(
     
     df.sensoForDisplay = reactive({
       req(input$fileSenso)
+      validate(
+        need(file_ext(input$fileSenso$name) %in% c(
+          'text/csv',
+          'text/comma-separated-values',
+          'text/tab-separated-values',
+          'text/plain',
+          'csv',
+          'tsv'
+        ), "Wrong file format. Try again!"))
       df <- read.csv(
         input$fileSenso$datapath,
         header = input$headerSenso,
@@ -690,6 +725,15 @@ shiny::shinyApp(
       req(input$sensoSession)
       req(input$sensoJudge)
       req(input$sensoProduct)
+      validate(
+        need(file_ext(input$fileSenso$name) %in% c(
+          'text/csv',
+          'text/comma-separated-values',
+          'text/tab-separated-values',
+          'text/plain',
+          'csv',
+          'tsv'
+        ), "Wrong file format. Try again!"))
       df = read.csv(
         input$fileSenso$datapath,
         header = input$headerSenso,
