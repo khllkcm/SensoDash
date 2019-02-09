@@ -77,26 +77,26 @@ fitModel = function(map,
 
 
 
-
-
-
-predictionQuality = function(predictedScores){
-  if (!is.null(dim(predictedScores))){
-  outOfBoundValueCount = predictedScores %>% apply(
-    MARGIN = 2,
-    FUN = function(x) {
-      length(na.exclude(x[x > 9])) + length(na.exclude(x[x < 1]))
-    }
-  ) %>% sum()
-  total=ncol(predictedScores)*nrow(predictedScores)
+predictionQuality = function(predictedScores) {
+  if (!is.null(dim(predictedScores))) {
+    outOfBoundValueCount = predictedScores %>% apply(
+      MARGIN = 2,
+      FUN = function(x) {
+        length(na.exclude(x[x > 9])) + length(na.exclude(x[x < 1]))
+      }
+    ) %>% sum()
+    total = ncol(predictedScores) * nrow(predictedScores)
   }
   else{
-    outOfBoundValueCount= length(predictedScores[predictedScores > 9])+length(predictedScores[predictedScores < 1])
-    total=length(predictedScores)
-    }
+    outOfBoundValueCount = length(predictedScores[predictedScores > 9]) + length(predictedScores[predictedScores < 1])
+    total = length(predictedScores)
+  }
   
-  msg = paste("There are",outOfBoundValueCount,"predicted values outside the score range, i.e.",
-                  paste0(round(100*outOfBoundValueCount/(total),2),"%.")
+  msg = paste(
+    "There are",
+    outOfBoundValueCount,
+    "predicted values outside the score range, i.e.",
+    paste0(round(100 * outOfBoundValueCount / (total), 2), "%.")
   )
   message(msg)
   return(msg)
@@ -130,13 +130,19 @@ plotMap = function(predictedScore,
                    prod.col = "white",
                    show.prods = F,
                    prod.points = F,
-                   interpolate=T,
-                   nbpoints=50,
+                   interpolate = T,
+                   nbpoints = 50,
                    plot.3D = F) {
-  legendBreaks =  if (max(predictedScore) == 1) c(0, 1) else seq(0, 100, by = 10)
+  legendBreaks =  if (max(predictedScore) == 1)
+    c(0, 1)
+  else
+    seq(0, 100, by = 10)
   contourBreaks = seq(to = 100, by = contour.step)
   if (plot.type != "preference") {
-    legendBreaks = if(diff(range(predictedScore))<2) seq(0,10) else seq(0,10, by=2)
+    legendBreaks = if (diff(range(predictedScore)) < 2)
+      seq(0, 10)
+    else
+      seq(0, 10, by = 2)
     contourBreaks = seq(to = 10, by = contour.step)
   }
   plot = ggplot(cbind(discreteSpace, predictedScore), aes(x = PC1, y = PC2)) +
@@ -162,16 +168,12 @@ plotMap = function(predictedScore,
   
   vjust = 0
   
-  if(prod.points){
-    plot = plot + geom_point(
-      data = mapBisc,
-      aes(
-        x = PC1,
-        y = PC2
-      ),
-      color = prod.col
-    )
-    vjust=-0.5
+  if (prod.points) {
+    plot = plot + geom_point(data = mapBisc,
+                             aes(x = PC1,
+                                 y = PC2),
+                             color = prod.col)
+    vjust = -0.5
   }
   if (show.prods) {
     plot = plot + geom_text(
@@ -183,12 +185,21 @@ plotMap = function(predictedScore,
       ),
       color = prod.col,
       size = 5,
-      vjust=vjust
+      vjust = vjust
     )
   }
-  if(plot.3D){
-    image=as.image(Z=predictedScore,x=discreteSpace,nx=nbpoints,ny=nbpoints)
-    plot = plot_ly(x=image$x,y=image$y,z = image$z, type="surface",height = 600)
+  if (plot.3D) {
+    image = as.image(Z = predictedScore,
+                     x = discreteSpace,
+                     nx = nbpoints,
+                     ny = nbpoints)
+    plot = plot_ly(
+      x = image$x,
+      y = image$y,
+      z = image$z,
+      type = "surface",
+      height = 600
+    )
   }
   
   return(plot)
