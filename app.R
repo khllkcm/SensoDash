@@ -82,7 +82,12 @@ shiny::shinyApp(
         HTML(
           ".control-label {margin-bottom: 1rem;} .progress {height: 20px;} .btn{padding:0.7rem 1.25rem;} .input-group .form-control:not(:first-child){padding-left:10px;} .form-group{margin-bottom: 0.75rem;}"
         )
-      )),
+      ),
+      ## JS ----
+      tags$script("$(document).on('click', function(event) {
+      Shiny.onInputChange('currentTab', $('.active').data().value);
+                  });")
+      ),
       useShinyalert(),
       argonTabItems(
         ## Datasets ----
@@ -467,12 +472,6 @@ shiny::shinyApp(
                     choices = c("Vector", "Circular", "Elliptic", "Quadratic"),
                     selected = "Quadratic"
                   ),
-                  selectInput(
-                    "trimActionPred",
-                    label = "Out of Range Action",
-                    choices = c("None", "Trim", "Project", "Bound"),
-                    selected = "Trim"
-                  ),
                   checkboxInput("pred3D", "3D Plot", FALSE),
                   conditionalPanel(
                     condition = "!input.pred3D",
@@ -541,16 +540,10 @@ shiny::shinyApp(
                 argonColumn(
                   width = 3,
                   selectInput(
-                    "modelFormula",
+                    "modelFormulaPref",
                     label = "Formula",
                     choices = c("Vector", "Circular", "Elliptic", "Quadratic"),
                     selected = "Quadratic"
-                  ),
-                  selectInput(
-                    "trimActionPref",
-                    label = "Out of Range Action",
-                    choices = c("None", "Trim", "Project", "Bound"),
-                    selected = "Trim"
                   ),
                   checkboxInput("pref3D", "3D Plot", FALSE),
                   conditionalPanel(
@@ -907,7 +900,7 @@ shiny::shinyApp(
     
     predictedScores = reactive({
       scores = sapply(fittedModels(), predict, newdata = discreteSpace()) %>%
-        as.data.frame() %>% trimValues(input$trimActionPred)
+        as.data.frame()
       return(scores)
     })
     
@@ -915,22 +908,41 @@ shiny::shinyApp(
       predictionQuality(predictedScores())
     })
     
-    observeEvent(predictedScores(), {
-      if(input$trimActionPred=="None")
-      shinyalert(
-        title = "Warning",
-        text = qualityMessagePred(),
-        closeOnEsc = TRUE,
-        closeOnClickOutside = TRUE,
-        html = FALSE,
-        type = "warning",
-        showConfirmButton = FALSE,
-        showCancelButton = FALSE,
-        timer = 5000,
-        imageUrl = "",
-        animation = TRUE
-      )
+    
+    observeEvent(input$currentTab, {
+      if (input$currentTab == "maps")
+        shinyalert(
+          title = "Warning",
+          text = qualityMessagePred(),
+          closeOnEsc = TRUE,
+          closeOnClickOutside = TRUE,
+          html = FALSE,
+          type = "warning",
+          showConfirmButton = TRUE,
+          showCancelButton = FALSE,
+          timer = 0,
+          imageUrl = "",
+          animation = TRUE
+        )
       }
+    )
+    
+    observeEvent(predictedScores(), {
+      if (input$currentTab == "maps")
+        shinyalert(
+          title = "Warning",
+          text = qualityMessagePred(),
+          closeOnEsc = TRUE,
+          closeOnClickOutside = TRUE,
+          html = FALSE,
+          type = "warning",
+          showConfirmButton = TRUE,
+          showCancelButton = FALSE,
+          timer = 0,
+          imageUrl = "",
+          animation = TRUE
+        )
+    }
     )
     
     output$mapPlot = renderPlot({
@@ -961,9 +973,13 @@ shiny::shinyApp(
     
     ## Pref Map ----
     
+    fittedModelsPref <- reactive({
+      fitModel(mapBisc(), formula = input$modelFormulaPref)
+    })
+    
     predictedScoresPref = reactive({
-      scores = sapply(fittedModels(), predict, newdata = discreteSpace()) %>%
-        as.data.frame() %>% trimValues(input$trimActionPref)
+      scores = sapply(fittedModelsPref(), predict, newdata = discreteSpace()) %>%
+        as.data.frame()
       return(scores)
     })
     
@@ -976,8 +992,8 @@ shiny::shinyApp(
       predictionQuality(predictedScoresPref())
     })
     
-    observeEvent(predictedScoresPref(), {
-      if(input$trimActionPref=="None")
+    observeEvent(input$currentTab, {
+      if (input$currentTab == "maps")
         shinyalert(
           title = "Warning",
           text = qualityMessagePref(),
@@ -985,9 +1001,27 @@ shiny::shinyApp(
           closeOnClickOutside = TRUE,
           html = FALSE,
           type = "warning",
-          showConfirmButton = FALSE,
+          showConfirmButton = TRUE,
           showCancelButton = FALSE,
-          timer = 5000,
+          timer = 0,
+          imageUrl = "",
+          animation = TRUE
+        )
+    }
+    )
+    
+    observeEvent(preferences(), {
+      if (input$currentTab == "maps")
+        shinyalert(
+          title = "Warning",
+          text = qualityMessagePref(),
+          closeOnEsc = TRUE,
+          closeOnClickOutside = TRUE,
+          html = FALSE,
+          type = "warning",
+          showConfirmButton = TRUE,
+          showCancelButton = FALSE,
+          timer = 0,
           imageUrl = "",
           animation = TRUE
         )
@@ -1002,7 +1036,7 @@ shiny::shinyApp(
         100 * preferences() %>% rowMeans(na.rm=T),
         mapBisc(),
         discreteSpace(),
-        type = "preference",
+        plot.type = "preference",
         plot.contour = input$prefContour,
         plot.3D = input$pref3D,
         show.prods = input$prefShowProds,
@@ -1020,7 +1054,7 @@ shiny::shinyApp(
       plotMap(100 * preferences() %>% rowMeans(na.rm=T),
               mapBisc(),
               discreteSpace(),
-              type = "preference",
+              plot.type = "preference",
               plot.3D = input$pref3D)
     })
   }
