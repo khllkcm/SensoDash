@@ -42,13 +42,13 @@ shiny::shinyApp(
         argonSidebarItem(
           tabName = "eda",
           icon = "chart-pie-35",
-          icon_color = "success",
+          icon_color = "warning",
           "Exploratory Data Analysis"
         ),
         argonSidebarItem(
           tabName = "pca",
           icon = "chart-bar-32",
-          icon_color = "warning",
+          icon_color = "success",
           "Principle Component Analysis"
         ),
         argonSidebarItem(
@@ -56,6 +56,12 @@ shiny::shinyApp(
           icon = "map-big",
           icon_color = "info",
           "Maps"
+        ),
+        argonSidebarItem(
+          tabName = "clust",
+          icon = "building",
+          icon_color = "danger",
+          "Clustering"
         )
       )
     ),
@@ -565,7 +571,7 @@ argonTabItems(
               ),
               checkboxInput("prefInterpolate", "Interpolate", TRUE),
               checkboxInput("prefContour", "Plot Contour", FALSE),
-              numericInput("prefContourStep", "Contour Step", 1.5, min =
+              numericInput("prefContourStep", "Contour Step", 5, min =
                              0.25),
               checkboxInput("prefShowProds", "Show Products", FALSE),
               checkboxInput("prefShowProdDots", "Show Product Points", FALSE),
@@ -613,6 +619,84 @@ argonTabItems(
         )
       )
     )
+  ),
+  
+  ## Clustering ----
+  argonTabItem(
+    tabName = "clust",
+    argonCard(
+      width = 12,
+      src = NULL,
+      icon = "ui-04",
+      status = "success",
+      shadow = TRUE,
+      border_level = 0,
+      argonRow(
+        argonColumn(
+          width = 2,
+          selectInput("clusterAlgo", "Clustering Algorithm", 
+                      choices = c("HCPC","K-Means")),
+          checkboxInput("repel","Repel",value=F),
+          conditionalPanel(
+            condition = "input.clusterAlgo=='K-Means'",
+            numericInput(
+              "numClust",
+              "Number of Clusters",
+              5,
+              min = 2,
+              max = 10,
+              step = 1
+            ))
+          
+        ),
+        argonColumn(
+          width = 10,
+          argonTabSet(
+            id = "tab-23",
+            card_wrapper = F,
+            horizontal = T,
+            circle = F,
+            size = "sm",
+            
+                   width = 12,
+                   iconList = NULL,
+                   
+                   ### Clusters ----
+                   
+                   argonTab(
+                     tabName = "Clusters",
+                     active = TRUE,
+                     argonColumn(
+                       center = T,
+                       plotOutput("clusters", height = "100%") %>%
+                         withSpinner(
+                           color = "#5e72e4",
+                           type = 7,
+                           proxy.height = "400px"
+                         )
+                     )
+                   ),
+                   ### Dendrogram ----
+                   argonTab(
+                     tabName = "Dendrogram",
+                     active = FALSE,
+                     argonColumn(
+                       center = T,
+                       plotOutput("dendrogram", height = "100%") %>%
+                         withSpinner(
+                           color = "#5e72e4",
+                           type = 7,
+                           proxy.height = "400px"
+                         )
+                     )
+                   )
+            
+                   
+                   
+                 )
+               ))
+    )
+    
   )
 )
 
@@ -987,60 +1071,11 @@ server = function(input, output, session) {
   
   ## Pref Map ----
   
-  fittedModelsPref <- reactive({
-    fitModel(mapBisc(), formula = input$modelFormulaPref)
-  })
-  
-  predictedScoresPref = reactive({
-    scores = sapply(fittedModelsPref(), predict, newdata = discreteSpace()) %>%
-      as.data.frame()
-    return(scores)
-  })
-  
   preferences = reactive({
     mapply(function(x, y) {
       as.numeric(x > mean(y))
-    }, predictedScoresPref(), df.hedo()) %>% as.data.frame()
+    }, predictedScores(), df.hedo()) %>% as.data.frame()
   })
-  
-  qualityMessagePref = reactive({
-    predictionQuality(predictedScoresPref())
-  })
-  
-  observeEvent(input$currentTab, {
-    if (input$currentTab == "maps")
-      shinyalert(
-        title = "Warning",
-        text = qualityMessagePref(),
-        closeOnEsc = TRUE,
-        closeOnClickOutside = TRUE,
-        html = FALSE,
-        type = "warning",
-        showConfirmButton = TRUE,
-        showCancelButton = FALSE,
-        timer = 0,
-        imageUrl = "",
-        animation = TRUE
-      )
-  })
-  
-  observeEvent(preferences(), {
-    if (input$currentTab == "maps")
-      shinyalert(
-        title = "Warning",
-        text = qualityMessagePref(),
-        closeOnEsc = TRUE,
-        closeOnClickOutside = TRUE,
-        html = FALSE,
-        type = "warning",
-        showConfirmButton = TRUE,
-        showCancelButton = FALSE,
-        timer = 0,
-        imageUrl = "",
-        animation = TRUE
-      )
-  })
-  
   
   output$mapPrefPlot = renderPlot({
     req(input$prefContourStep)
@@ -1072,6 +1107,34 @@ server = function(input, output, session) {
       plot.3D = input$pref3D
     )
   })
+  
+  ## Clustering ----
+  
+  obj.pca.conso = reactive({
+    PCA(t(df.hedo()),graph=F)
+  })
+  
+  obj.hcpc = reactive({
+    HCPC(obj.pca.conso(), iter.max = 10, graph = F)
+  })
+  
+  obj.kmeans = reactive({
+    kmeans(t(df.hedo()),centers = input$numClust)
+  })
+  
+  output$clusters = renderPlot({
+    if(input$clusterAlgo=="HCPC")
+      fviz_cluster(obj.hcpc(),repel = input$repel , geom = "text")
+    else
+      fviz_cluster(obj.kmeans(),t(df.hedo()), geom = "text",repel=input$repel)
+  },height = 600, width = 600)
+  
+
+  output$dendrogram = renderPlot({
+    if(input$clusterAlgo=="HCPC")
+      fviz_dend(obj.hcpc(),color_labels_by_k = TRUE)
+  },height = 600, width = 600)
+  
 }
 
 )
