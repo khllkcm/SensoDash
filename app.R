@@ -488,6 +488,9 @@ argonTabItems(
             checkboxInput("pred3D", "3D Plot", FALSE),
             conditionalPanel(
               condition = "!input.pred3D",
+              checkboxInput("predInterpolate", "Interpolate", TRUE),
+              conditionalPanel(
+                condition = "!input.predInterpolate",
               numericInput(
                 "predNbPoints",
                 "Number of points",
@@ -495,12 +498,13 @@ argonTabItems(
                 min = 10,
                 max = 150,
                 step = 10
-              ),
-              checkboxInput("predInterpolate", "Interpolate", TRUE),
+              )),
               checkboxInput("predContour", "Plot Contour", FALSE),
+              conditionalPanel(
+                condition = "input.predContour",
               numericInput("predContourStep", "Contour Step", 1.5, min =
-                             0.25),
-              checkboxInput("predShowProds", "Show Products", FALSE),
+                             0.25)),
+              checkboxInput("predShowProds", "Show Product Names", FALSE),
               checkboxInput("predShowProdDots", "Show Product Points", FALSE),
               checkboxInput("predChangeColors", "Change Text Colors", FALSE),
               conditionalPanel(
@@ -561,19 +565,23 @@ argonTabItems(
             checkboxInput("pref3D", "3D Plot", FALSE),
             conditionalPanel(
               condition = "!input.pref3D",
-              numericInput(
-                "prefNbPoints",
-                "Number of points",
-                50,
-                min = 10,
-                max = 150,
-                step = 10
-              ),
               checkboxInput("prefInterpolate", "Interpolate", TRUE),
+              conditionalPanel(
+                condition = "!input.prefInterpolate",
+                numericInput(
+                  "prefNbPoints",
+                  "Number of points",
+                  50,
+                  min = 10,
+                  max = 150,
+                  step = 10
+                )),
               checkboxInput("prefContour", "Plot Contour", FALSE),
-              numericInput("prefContourStep", "Contour Step", 5, min =
-                             0.25),
-              checkboxInput("prefShowProds", "Show Products", FALSE),
+              conditionalPanel(
+                condition = "input.prefContour",
+                numericInput("prefContourStep", "Contour Step", 10, min =
+                               1)),
+              checkboxInput("prefShowProds", "Show Product Names", FALSE),
               checkboxInput("prefShowProdDots", "Show Product Points", FALSE),
               checkboxInput("prefChangeColors", "Change Text Colors", FALSE),
               conditionalPanel(
