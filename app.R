@@ -506,7 +506,7 @@ argonTabItems(
                              0.25)),
               checkboxInput("predShowProds", "Show Product Names", FALSE),
               checkboxInput("predShowProdDots", "Show Product Points", FALSE),
-              checkboxInput("predChangeColors", "Change Text Colors", FALSE),
+              checkboxInput("predChangeColors", "Change Label Colors", FALSE),
               conditionalPanel(
                 condition = "input.predChangeColors",
                 colourInput(
@@ -583,7 +583,7 @@ argonTabItems(
                                1)),
               checkboxInput("prefShowProds", "Show Product Names", FALSE),
               checkboxInput("prefShowProdDots", "Show Product Points", FALSE),
-              checkboxInput("prefChangeColors", "Change Text Colors", FALSE),
+              checkboxInput("prefChangeColors", "Change Label Colors", FALSE),
               conditionalPanel(
                 condition = "input.prefChangeColors",
                 colourInput(
