@@ -668,12 +668,28 @@ argonTabItems(
             
                    width = 12,
                    iconList = NULL,
-                   
+            
+                    
+                    ### Inertia ----
+                    
+                    argonTab(
+                      tabName = "Inertia",
+                      active = TRUE,
+                      argonColumn(
+                        center = T,
+                        plotOutput("inertia", height = "100%") %>%
+                          withSpinner(
+                            color = "#5e72e4",
+                            type = 7,
+                            proxy.height = "400px"
+                          )
+                      )
+                    ),
                    ### Clusters ----
                    
                    argonTab(
                      tabName = "Clusters",
-                     active = TRUE,
+                     active = FALSE,
                      argonColumn(
                        center = T,
                        plotOutput("clusters", height = "100%") %>%
