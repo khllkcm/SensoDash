@@ -8,6 +8,7 @@ library(doBy)
 library(factoextra)
 library(shinyalert)
 library(tools)
+library(tibble)
 
 #setwd("~/School/Atelier/")
 source("functions.R")
@@ -491,19 +492,21 @@ argonTabItems(
               checkboxInput("predInterpolate", "Interpolate", TRUE),
               conditionalPanel(
                 condition = "!input.predInterpolate",
-              numericInput(
-                "predNbPoints",
-                "Number of points",
-                50,
-                min = 10,
-                max = 150,
-                step = 10
-              )),
+                numericInput(
+                  "predNbPoints",
+                  "Number of points",
+                  50,
+                  min = 10,
+                  max = 150,
+                  step = 10
+                )
+              ),
               checkboxInput("predContour", "Plot Contour", FALSE),
               conditionalPanel(
                 condition = "input.predContour",
-              numericInput("predContourStep", "Contour Step", 1.5, min =
-                             0.25)),
+                numericInput("predContourStep", "Contour Step", 1.5, min =
+                               0.25)
+              ),
               checkboxInput("predShowProds", "Show Product Names", FALSE),
               checkboxInput("predShowProdDots", "Show Product Points", FALSE),
               checkboxInput("predChangeColors", "Change Label Colors", FALSE),
@@ -575,12 +578,14 @@ argonTabItems(
                   min = 10,
                   max = 150,
                   step = 10
-                )),
+                )
+              ),
               checkboxInput("prefContour", "Plot Contour", FALSE),
               conditionalPanel(
                 condition = "input.prefContour",
                 numericInput("prefContourStep", "Contour Step", 10, min =
-                               1)),
+                               1)
+              ),
               checkboxInput("prefShowProds", "Show Product Names", FALSE),
               checkboxInput("prefShowProdDots", "Show Product Points", FALSE),
               checkboxInput("prefChangeColors", "Change Label Colors", FALSE),
@@ -642,9 +647,12 @@ argonTabItems(
       argonRow(
         argonColumn(
           width = 2,
-          selectInput("clusterAlgo", "Clustering Algorithm", 
-                      choices = c("HCPC","K-Means")),
-          checkboxInput("repel","Repel",value=F),
+          selectInput(
+            "clusterAlgo",
+            "Clustering Algorithm",
+            choices = c("Hierarchical", "K-Means")
+          ),
+          checkboxInput("repel", "Repel", value = F),
           conditionalPanel(
             condition = "input.clusterAlgo=='K-Means'",
             numericInput(
@@ -654,7 +662,45 @@ argonTabItems(
               min = 2,
               max = 10,
               step = 1
-            ))
+            )
+          ),
+          conditionalPanel(
+            condition = "input.clusterAlgo=='Hierarchical'",
+            selectInput(
+              "hclusterDist",
+              "Distance Method",
+              choices = c(
+                "euclidean",
+                "maximum",
+                "manhattan",
+                "canberra",
+                "binary",
+                "minkowski"
+              )
+            ),
+            selectInput(
+              "hclusterAgg",
+              "Aggregation Method",
+              choices = c(
+                "ward.D",
+                "ward.D2",
+                "single",
+                "complete",
+                "average",
+                "mcquitty",
+                "median",
+                "centroid"
+              )
+            ),
+            numericInput(
+              "hclusterNum",
+              "Number of Clusters",
+              5,
+              min = 2,
+              max = 10,
+              step = 1
+            )
+          )
           
         ),
         argonColumn(
@@ -666,59 +712,83 @@ argonTabItems(
             circle = F,
             size = "sm",
             
-                   width = 12,
-                   iconList = NULL,
+            width = 12,
+            iconList = NULL,
             
-                    
-                    ### Inertia ----
-                    
-                    argonTab(
-                      tabName = "Inertia",
-                      active = TRUE,
-                      argonColumn(
-                        center = T,
-                        plotOutput("inertia", height = "100%") %>%
-                          withSpinner(
-                            color = "#5e72e4",
-                            type = 7,
-                            proxy.height = "400px"
-                          )
-                      )
-                    ),
-                   ### Clusters ----
-                   
-                   argonTab(
-                     tabName = "Clusters",
-                     active = FALSE,
-                     argonColumn(
-                       center = T,
-                       plotOutput("clusters", height = "100%") %>%
-                         withSpinner(
-                           color = "#5e72e4",
-                           type = 7,
-                           proxy.height = "400px"
-                         )
-                     )
-                   ),
-                   ### Dendrogram ----
-                   argonTab(
-                     tabName = "Dendrogram",
-                     active = FALSE,
-                     argonColumn(
-                       center = T,
-                       plotOutput("dendrogram", height = "100%") %>%
-                         withSpinner(
-                           color = "#5e72e4",
-                           type = 7,
-                           proxy.height = "400px"
-                         )
-                     )
-                   )
             
-                   
-                   
-                 )
-               ))
+            ### Inertia ----
+            
+            argonTab(
+              tabName = "Inertia",
+              active = TRUE,
+              argonColumn(
+                center = T,
+                plotOutput("inertia", height = "100%") %>%
+                  withSpinner(
+                    color = "#5e72e4",
+                    type = 7,
+                    proxy.height = "400px"
+                  )
+              )
+            ),
+            ### Clusters ----
+            
+            argonTab(
+              tabName = "Clusters",
+              active = FALSE,
+              argonColumn(
+                center = T,
+                plotOutput("clusters", height = "100%") %>%
+                  withSpinner(
+                    color = "#5e72e4",
+                    type = 7,
+                    proxy.height = "400px"
+                  )
+              )
+            ),
+            ### Dendrogram ----
+            argonTab(
+              tabName = "Dendrogram",
+              active = FALSE,
+              argonColumn(
+                center = T,
+                plotOutput("dendrogram", height = "100%") %>%
+                  withSpinner(
+                    color = "#5e72e4",
+                    type = 7,
+                    proxy.height = "400px"
+                  )
+              )
+            ),
+            ### Class Preference ----
+            argonTab(
+              tabName = "Class Preference",
+              active = FALSE,
+              argonColumn(
+                center = T,
+                plotlyOutput("classPref", height = "100%") %>%
+                  withSpinner(
+                    color = "#5e72e4",
+                    type = 7,
+                    proxy.height = "400px"
+                  ),
+                div(
+                  style = 'overflow-x: scroll',
+                  dataTableOutput("productCarac") %>%
+                    withSpinner(
+                      color = "#5e72e4",
+                      type = 7,
+                      proxy.height = "400px"
+                    )
+                )
+              )
+            )
+            
+            
+            
+          )
+        )
+      )
     )
     
   )
@@ -764,6 +834,7 @@ server = function(input, output, session) {
   })
   
   df.hedo = reactive({
+    return(read.csv("hedo.csv", sep = ';', row.names = 1))
     req(input$fileHedo)
     validate(need(
       file_ext(input$fileHedo$name) %in% c(
@@ -848,6 +919,7 @@ server = function(input, output, session) {
   })
   
   df.senso = reactive(({
+    return(read.csv("senso.csv"))
     req(input$sensoSession)
     req(input$sensoJudge)
     req(input$sensoProduct)
@@ -939,7 +1011,7 @@ server = function(input, output, session) {
   
   ## PCA ----
   obj.pca = reactive({
-    res.PCA = getPCA(df.senso())
+    res.PCA = getPCA(df.senso())$PCA
     if (!is.null(input$fileHedo))
       rownames(res.PCA$ind$coord) = rownames(df.hedo())
     return(res.PCA)
@@ -1009,14 +1081,18 @@ server = function(input, output, session) {
   ## Pred Map ----
   
   mapBisc <- reactive({
-    mapWithPCA(df.senso(), df.hedo())
+    req(input$currentTab)
+    if (input$currentTab != "data")
+      mapWithPCA(df.senso(), df.hedo())
   })
   
   fittedModels <- reactive({
+    req(mapBisc())
     fitModel(mapBisc(), formula = input$modelFormula)
   })
   
   discreteSpace = reactive({
+    req(mapBisc())
     makeGrid(mapBisc(), input$predNbPoints)
   })
   
@@ -1132,32 +1208,105 @@ server = function(input, output, session) {
     )
   })
   
-  ## Clustering ----
+  ## Clustering Objects----
   
   obj.pca.conso = reactive({
-    PCA(t(df.hedo()),graph=F)
+    PCA(t(df.hedo()), graph = F)
   })
   
-  obj.hcpc = reactive({
-    HCPC(obj.pca.conso(), iter.max = 10, graph = F)
+  
+  obj.hc = reactive({
+    distance = dist(t(df.hedo()), method = input$hclusterDist)
+    hc = hclust(distance, method = input$hclusterAgg)
+    return(hc)
   })
+  
+  
+  hclasses = reactive({
+    req(input$hclusterNum)
+    cutree(obj.hc(), k = input$hclusterNum)
+  })
+  
+  classPref = reactive({
+    overallMeans = df.hedo() %>% rowMeans()
+    classPref = NULL
+    for (class in unique(hclasses())) {
+      classPref = cbind(classPref,
+                        as.numeric(df.hedo()[, which(hclasses() == class)] %>% rowMeans() > overallMeans))
+    }
+    rownames(classPref) = rownames(df.hedo())
+    return(classPref)
+  })
+  
   
   obj.kmeans = reactive({
-    kmeans(t(df.hedo()),centers = input$numClust)
+    kmeans(t(df.hedo()), centers = input$numClust)
   })
   
-  output$clusters = renderPlot({
-    if(input$clusterAlgo=="HCPC")
-      fviz_cluster(obj.hcpc(),repel = input$repel , geom = "text")
-    else
-      fviz_cluster(obj.kmeans(),t(df.hedo()), geom = "text",repel=input$repel)
-  },height = 600, width = 600)
+  ## Inertia ----
   
-
+  output$inertia = renderPlot({
+    if (input$clusterAlgo == "Hierarchical") {
+      ggplot(data.frame(
+        height = rev(obj.hc()$height),
+        class = seq(ncol(df.hedo()) - 1)
+      ),
+      aes(x = class, y = height)) +
+        geom_step(direction = 'vh') +
+        xlab("Number of Classes") +
+        ylab("Inertia") +
+        theme_minimal()
+    }
+  }, height = 600, width = 600)
+  
+  ## Clusters ----
+  output$clusters = renderPlot({
+    if (input$clusterAlgo == "Hierarchical")
+      fviz_pca_ind(
+        obj.pca.conso(),
+        repel = F,
+        habillage = as.factor(hclasses()),
+        ellipse.type = "convex",
+        addEllipses = T
+      )
+  }, height = 600, width = 600)
+  
+  ## Dendogram ----
+  
   output$dendrogram = renderPlot({
-    if(input$clusterAlgo=="HCPC")
-      fviz_dend(obj.hcpc(),color_labels_by_k = TRUE)
-  },height = 600, width = 600)
+    if (input$clusterAlgo == "Hierarchical")
+      fviz_dend(obj.hc(), color_labels_by_k = TRUE)
+  }, height = 600, width = 600)
+  
+  ## Class Preference ----
+  
+  output$classPref = renderPlotly({
+    plot_ly(
+      x = as.factor(unique(hclasses())),
+      y = rownames(classPref()),
+      z = classPref(),
+      type = "heatmap",
+      colors = c("red", "blue"),
+      source = "heatplot"
+    ) %>%
+      layout(xaxis = list(title = "", dtick = 1),
+             yaxis = list(title = ""))
+  })
+  
+  
+  output$productCarac <- renderDataTable({
+    s <- event_data("plotly_click", source = "heatplot")
+    if (length(s)) {
+      table = t(getPCA(df.senso())$X[unlist(s[["pointNumber"]])[1] + 1, -1]) %>%
+        as.data.frame() %>%
+        rownames_to_column(var = paste(s[["y"]], "Characteristics"))
+      colnames(table)[2] = "Average Judge Score"
+      return(table)
+    } else {
+      
+    }
+  }, options = list(processing = FALSE))
+  
   
 }
 
