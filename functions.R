@@ -18,11 +18,11 @@ getPCA = function(df.senso) {
     keep.names = T
   )
   res.pca = PCA(df.X[, -1], graph = F)
-  return(res.pca)
+  return(list(PCA=res.pca,X=df.X))
 }
 
 mapWithPCA = function(df.senso, df.hedo, x = 2) {
-  obj.pca = getPCA(df.senso)
+  obj.pca = getPCA(df.senso)$PCA
   pcs = obj.pca$ind$coord[, 1:x]
   colnames(pcs) = paste0('PC', seq(x))
   map = cbind.data.frame(df.hedo, pcs)
