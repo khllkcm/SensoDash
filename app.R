@@ -1264,7 +1264,7 @@ server = function(input, output, session) {
     if (input$clusterAlgo == "Hierarchical")
       fviz_pca_ind(
         obj.pca.conso(),
-        repel = F,
+        repel = input$repel,
         habillage = as.factor(hclasses()),
         ellipse.type = "convex",
         addEllipses = T
