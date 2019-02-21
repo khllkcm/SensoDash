@@ -834,7 +834,7 @@ server = function(input, output, session) {
   })
   
   df.hedo = reactive({
-    return(read.csv("hedo.csv", sep = ';', row.names = 1))
+    #return(read.csv("hedo.csv", sep = ';', row.names = 1))
     req(input$fileHedo)
     validate(need(
       file_ext(input$fileHedo$name) %in% c(
@@ -919,7 +919,7 @@ server = function(input, output, session) {
   })
   
   df.senso = reactive(({
-    return(read.csv("senso.csv"))
+    #return(read.csv("senso.csv"))
     req(input$sensoSession)
     req(input$sensoJudge)
     req(input$sensoProduct)
