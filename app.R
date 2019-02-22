@@ -1238,6 +1238,9 @@ server = function(input, output, session) {
     return(classMeans)
   })
   
+  classMeansText = reactive({
+    paste("Average Score",round(classMeans(),3)) %>%matrix(nrow =nrow(classMeans()))
+  })
   
   obj.kmeans = reactive({
     kmeans(t(df.hedo()), centers = input$numClust)
@@ -1286,8 +1289,11 @@ server = function(input, output, session) {
       y = rownames(classMeans()),
       z = classMeans(),
       type = "heatmap",
-      colors = c("red", "blue"),
-      source = "heatplot"
+      source = "heatplot",
+      xgap = 5,
+      ygap = 1,
+      hoverinfo="text",
+      text=classMeansText()
     ) %>%
       layout(xaxis = list(title = "", dtick = 1),
              yaxis = list(title = ""))
@@ -1298,6 +1304,7 @@ server = function(input, output, session) {
     s <- event_data("plotly_click", source = "heatplot")
     if (length(s)) {
       table = t(getPCA(df.senso())$X[unlist(s[["pointNumber"]])[1] + 1, -1]) %>%
+        round(3)%>%
         as.data.frame() %>%
         rownames_to_column(var = paste(s[["y"]], "Characteristics"))
       colnames(table)[2] = "Average Judge Score"
