@@ -1227,15 +1227,15 @@ server = function(input, output, session) {
     cutree(obj.hc(), k = input$hclusterNum)
   })
   
-  classPref = reactive({
-    overallMeans = df.hedo() %>% rowMeans()
-    classPref = NULL
+  
+  classMeans = reactive({
+    classMeans = NULL
     for (class in unique(hclasses())) {
-      classPref = cbind(classPref,
-                        as.numeric(df.hedo()[, which(hclasses() == class)] %>% rowMeans() > overallMeans))
-    }
-    rownames(classPref) = rownames(df.hedo())
-    return(classPref)
+      classMeans = cbind(classMeans,df.hedo()[, which(hclasses() == class)] %>% 
+                           as.data.frame() %>% rowMeans())
+      }
+    rownames(classMeans) = rownames(df.hedo())
+    return(classMeans)
   })
   
   
@@ -1283,8 +1283,8 @@ server = function(input, output, session) {
   output$classPref = renderPlotly({
     plot_ly(
       x = as.factor(unique(hclasses())),
-      y = rownames(classPref()),
-      z = classPref(),
+      y = rownames(classMeans()),
+      z = classMeans(),
       type = "heatmap",
       colors = c("red", "blue"),
       source = "heatplot"
