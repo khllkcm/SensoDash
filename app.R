@@ -762,11 +762,11 @@ argonTabItems(
             ),
             ### Class Preference ----
             argonTab(
-              tabName = "Class Preference",
+              tabName = "Class Characteristics",
               active = FALSE,
               argonColumn(
                 center = T,
-                plotlyOutput("classPref", height = "100%") %>%
+                plotlyOutput("classCharac", height = "100%") %>%
                   withSpinner(
                     color = "#5e72e4",
                     type = 7,
@@ -774,7 +774,7 @@ argonTabItems(
                   ),
                 div(
                   style = 'overflow-x: scroll',
-                  dataTableOutput("productCarac") %>%
+                  dataTableOutput("productCharac") %>%
                     withSpinner(
                       color = "#5e72e4",
                       type = 7,
@@ -1283,7 +1283,7 @@ server = function(input, output, session) {
   
   ## Class Preference ----
   
-  output$classPref = renderPlotly({
+  output$classCharac = renderPlotly({
     plot_ly(
       x = as.factor(unique(hclasses())),
       y = rownames(classMeans()),
@@ -1300,7 +1300,7 @@ server = function(input, output, session) {
   })
   
   
-  output$productCarac <- renderDataTable({
+  output$productCharac <- renderDataTable({
     s <- event_data("plotly_click", source = "heatplot")
     if (length(s)) {
       table = t(getPCA(df.senso())$X[unlist(s[["pointNumber"]])[1] + 1, -1]) %>%
