@@ -1091,13 +1091,13 @@ server = function(input, output, session) {
     fitModel(mapBisc(), formula = input$modelFormula)
   })
   
-  discreteSpace = reactive({
+  predDiscreteSpace = reactive({
     req(mapBisc())
     makeGrid(mapBisc(), input$predNbPoints)
   })
   
   predictedScores = reactive({
-    scores = sapply(fittedModels(), predict, newdata = discreteSpace()) %>%
+    scores = sapply(fittedModels(), predict, newdata = predDiscreteSpace()) %>%
       as.data.frame()
     return(scores)
   })
@@ -1147,7 +1147,7 @@ server = function(input, output, session) {
     plotMap(
       predictedScores() %>% rowMeans(na.rm = T),
       mapBisc(),
-      discreteSpace(),
+      predDiscreteSpace(),
       plot.contour = input$predContour,
       plot.3D = input$pred3D,
       show.prods = input$predShowProds,
@@ -1164,13 +1164,18 @@ server = function(input, output, session) {
     plotMap(
       predictedScores() %>% rowMeans(na.rm = T),
       mapBisc(),
-      discreteSpace(),
+      predDiscreteSpace(),
       plot.3D = input$pred3D
     )
   })
   
   ## Pref Map ----
+  prefDiscreteSpace = reactive({
+    req(mapBisc())
+    makeGrid(mapBisc(), input$prefNbPoints)
+  })
   
+
   preferences = reactive({
     mapply(function(x, y) {
       as.numeric(x > mean(y))
@@ -1183,7 +1188,7 @@ server = function(input, output, session) {
     plotMap(
       100 * preferences() %>% rowMeans(na.rm = T),
       mapBisc(),
-      discreteSpace(),
+      prefDiscreteSpace(),
       plot.type = "preference",
       plot.contour = input$prefContour,
       plot.3D = input$pref3D,
@@ -1202,7 +1207,7 @@ server = function(input, output, session) {
     plotMap(
       100 * preferences() %>% rowMeans(na.rm = T),
       mapBisc(),
-      discreteSpace(),
+      prefDiscreteSpace(),
       plot.type = "preference",
       plot.3D = input$pref3D
     )
