@@ -1170,6 +1170,13 @@ server = function(input, output, session) {
   })
   
   ## Pref Map ----
+  
+  prefPredictedScores = reactive({
+      scores = sapply(fittedModels(), predict, newdata = prefDiscreteSpace()) %>%
+      as.data.frame()
+      return(scores)
+  })
+  
   prefDiscreteSpace = reactive({
     req(mapBisc())
     makeGrid(mapBisc(), input$prefNbPoints)
@@ -1179,7 +1186,7 @@ server = function(input, output, session) {
   preferences = reactive({
     mapply(function(x, y) {
       as.numeric(x > mean(y))
-    }, predictedScores(), df.hedo()) %>% as.data.frame()
+    }, prefPredictedScores(), df.hedo()) %>% as.data.frame()
   })
   
   output$mapPrefPlot = renderPlot({
