@@ -29,7 +29,7 @@ server <- function(input, output) {
     }
   })
   
-  df.hedo = reactive({
+  df.hedo = eventReactive(input$validateHedo,{
     #return(read.csv("hedo.csv", sep = ';', row.names = 1))
     req(input$fileHedo)
     validate(need(
@@ -114,7 +114,7 @@ server <- function(input, output) {
     }
   })
   
-  df.senso = reactive(({
+  df.senso = eventReactive(input$validateSenso,{
     #return(read.csv("senso.csv"))
     req(input$sensoSession)
     req(input$sensoJudge)
@@ -140,7 +140,7 @@ server <- function(input, output) {
     df[[input$sensoJudge]] = as.factor(df[[input$sensoJudge]])
     df[[input$sensoProduct]] = as.factor(df[[input$sensoProduct]])
     return(df)
-  }))
+  })
   
   ## Display Dataset Senso ----
   output$contentsSenso <- renderDataTable({

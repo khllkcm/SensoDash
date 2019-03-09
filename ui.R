@@ -100,17 +100,19 @@ argonTabItems(
         argonRow(
           argonColumn(
             width = 3,
-            fileInput(
-              "fileHedo",
-              "Choose CSV File",
-              multiple = TRUE,
-              accept = c(
-                'text/csv',
-                'text/comma-separated-values',
-                'text/tab-separated-values',
-                'text/plain',
-                'csv',
-                'tsv'
+            argonColumn(
+              fileInput(
+                "fileHedo",
+                "Choose CSV File",
+                multiple = TRUE,
+                accept = c(
+                  'text/csv',
+                  'text/comma-separated-values',
+                  'text/tab-separated-values',
+                  'text/plain',
+                  'csv',
+                  'tsv'
+                )
               )
             ),
             argonRow(
@@ -155,8 +157,11 @@ argonTabItems(
                   selected = "head"
                 )
               )
+            ),
+            argonColumn(
+              center=T,
+              actionButton("validateHedo", "Validate Hedonic Dataset")
             )
-            
           ),
           argonColumn(
             center = T,
@@ -181,17 +186,19 @@ argonTabItems(
         argonRow(
           argonColumn(
             width = 3,
-            fileInput(
-              "fileSenso",
-              "Choose CSV File",
-              multiple = TRUE,
-              accept = c(
-                'text/csv',
-                'text/comma-separated-values',
-                'text/tab-separated-values',
-                'text/plain',
-                'csv',
-                'tsv'
+            argonColumn(
+              fileInput(
+                "fileSenso",
+                "Choose CSV File",
+                multiple = TRUE,
+                accept = c(
+                  'text/csv',
+                  'text/comma-separated-values',
+                  'text/tab-separated-values',
+                  'text/plain',
+                  'csv',
+                  'tsv'
+                )
               )
             ),
             argonRow(
@@ -239,7 +246,11 @@ argonTabItems(
             ),
             uiOutput("selectSensoSession"),
             uiOutput("selectSensoJudge"),
-            uiOutput("selectSensoProduct")
+            uiOutput("selectSensoProduct"),
+            argonColumn(
+              center=T,
+              actionButton("validateSenso", "Validate Sensory Dataset")
+            )
           ),
           argonColumn(
             center = T,
