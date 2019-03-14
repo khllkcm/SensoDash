@@ -72,6 +72,7 @@ ui <- argonDashPage(
       ## JS ----
       tags$script(
         "$(document).on('click', function(event) {
+        $('li[class*=\\'active\\']').find('a').addClass('active show');
         $('li[class*=\\'active\\']').removeClass('active');
         Shiny.onInputChange('currentTab', $('.active').data().value);
         });"
@@ -695,22 +696,12 @@ argonTabItems(
         ),
         argonColumn(
           width = 10,
-          argonTabSet(
+          tabsetPanel(
             id = "tab-23",
-            card_wrapper = F,
-            horizontal = T,
-            circle = F,
-            size = "sm",
-            
-            width = 12,
-            iconList = NULL,
-            
-            
             ### Inertia ----
             
-            argonTab(
-              tabName = "Inertia",
-              active = TRUE,
+            tabPanel(
+              "Inertia",
               argonColumn(
                 center = T,
                 plotOutput("inertia", height = "100%") %>%
@@ -723,9 +714,8 @@ argonTabItems(
             ),
             ### Clusters ----
             
-            argonTab(
-              tabName = "Clusters",
-              active = FALSE,
+            tabPanel(
+              "Clusters",
               argonColumn(
                 center = T,
                 plotOutput("clusters", height = "100%") %>%
@@ -737,9 +727,8 @@ argonTabItems(
               )
             ),
             ### Dendrogram ----
-            argonTab(
-              tabName = "Dendrogram",
-              active = FALSE,
+            tabPanel(
+              "Dendrogram",
               argonColumn(
                 center = T,
                 plotOutput("dendrogram", height = "100%") %>%
@@ -751,9 +740,8 @@ argonTabItems(
               )
             ),
             ### Class Preference ----
-            argonTab(
-              tabName = "Class Characteristics",
-              active = FALSE,
+            tabPanel(
+              "Class Characteristics",
               argonColumn(
                 center = T,
                 plotlyOutput("classCharac", height = "100%") %>%
