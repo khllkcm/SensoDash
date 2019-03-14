@@ -699,18 +699,7 @@ argonTabItems(
             id = "tab-23",
             ### Inertia ----
             
-            tabPanel(
-              "Inertia",
-              argonColumn(
-                center = T,
-                plotOutput("inertia", height = "100%") %>%
-                  withSpinner(
-                    color = "#5e72e4",
-                    type = 7,
-                    proxy.height = "400px"
-                  )
-              )
-            ),
+            
             ### Clusters ----
             
             tabPanel(

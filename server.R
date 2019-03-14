@@ -471,6 +471,24 @@ server <- function(input, output) {
   }, height = 600, width = 600)
   
   ## Clusters ----
+  observe(if (input$clusterAlgo=='K-Means') {
+    removeTab(inputId = "tab-23", target = "Inertia")
+  }
+  else {
+    insertTab(inputId = "tab-23",tabPanel(
+      "Inertia",
+      argonColumn(
+        center = T,
+        plotOutput("inertia", height = "100%") %>%
+          withSpinner(
+            color = "#5e72e4",
+            type = 7,
+            proxy.height = "400px"
+          )
+      )
+    ),target = "Clusters",select=T)
+  })
+  
   output$clusters = renderPlot({
     if (input$clusterAlgo == "Hierarchical")
       fviz_pca_ind(
@@ -480,6 +498,7 @@ server <- function(input, output) {
         ellipse.type = "convex",
         addEllipses = T
       )
+    
   }, height = 600, width = 600)
   
   ## Dendogram ----
