@@ -430,16 +430,10 @@ server <- function(input, output) {
   })
   
   
-  hclasses = reactive({
-    req(input$hclusterNum)
-    cutree(obj.hc(), k = input$hclusterNum)
-  })
-  
-  
   classMeans = reactive({
     classMeans = NULL
-    for (class in unique(hclasses())) {
-      classMeans = cbind(classMeans,df.hedo()[, which(hclasses() == class)] %>% 
+    for (class in unique(obj.classes())) {
+      classMeans = cbind(classMeans,df.hedo()[, which(obj.classes() == class)] %>% 
                            as.data.frame() %>% rowMeans())
     }
     rownames(classMeans) = rownames(df.hedo())
@@ -451,8 +445,20 @@ server <- function(input, output) {
   })
   
   obj.kmeans = reactive({
-    kmeans(t(df.hedo()), centers = input$numClust)
+    kmeans(t(df.hedo()), centers = input$kmeansNum, algorithm=input$kmeansAlgo)
   })
+  
+  obj.classes = reactive({
+    if (input$clusterAlgo == "Hierarchical"){
+      req(input$hclusterNum)
+      classes= cutree(obj.hc(), k = input$hclusterNum)
+    }
+    if (input$clusterAlgo == "K-Means"){
+      classes = obj.kmeans()$cluster
+    }
+    return(classes)
+  })
+  
   
   ## Inertia ----
   
@@ -490,11 +496,10 @@ server <- function(input, output) {
   })
   
   output$clusters = renderPlot({
-    if (input$clusterAlgo == "Hierarchical")
       fviz_pca_ind(
         obj.pca.conso(),
         repel = input$repel,
-        habillage = as.factor(hclasses()),
+        habillage = as.factor(obj.classes()),
         ellipse.type = "convex",
         addEllipses = T
       )
@@ -512,7 +517,7 @@ server <- function(input, output) {
   
   output$classCharac = renderPlotly({
     plot_ly(
-      x = as.factor(unique(hclasses())),
+      x = as.factor(unique(obj.classes())),
       y = rownames(classMeans()),
       z = classMeans(),
       type = "heatmap",
