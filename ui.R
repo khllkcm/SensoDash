@@ -643,17 +643,8 @@ argonTabItems(
             choices = c("Hierarchical", "K-Means")
           ),
           checkboxInput("repel", "Repel", value = F),
-          conditionalPanel(
-            condition = "input.clusterAlgo=='K-Means'",
-            numericInput(
-              "numClust",
-              "Number of Clusters",
-              5,
-              min = 2,
-              max = 10,
-              step = 1
-            )
-          ),
+          
+          ### Hierarchical Clustering inputs ----
           conditionalPanel(
             condition = "input.clusterAlgo=='Hierarchical'",
             selectInput(
@@ -691,6 +682,27 @@ argonTabItems(
               step = 1
             )
           )
+          ### K-means inputs ----
+          ,conditionalPanel(
+            condition = "input.clusterAlgo=='K-Means'",
+            selectInput(
+              "kmeansAlgo",
+              "Algorithm",
+              choices = c(
+                "Hartigan-Wong", "Lloyd", "Forgy","MacQueen"
+              )
+            ),
+            numericInput(
+              "kmeansNum",
+              "Number of Clusters",
+              2,
+              min = 2,
+              max = 10,
+              step = 1
+            )
+          )
+          
+          
           
         ),
         argonColumn(
