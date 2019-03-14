@@ -72,7 +72,6 @@ ui <- argonDashPage(
       ## JS ----
       tags$script(
         "$(document).on('click', function(event) {
-        $('li[class*=\\'active\\']').find('a').addClass('active show');
         $('li[class*=\\'active\\']').removeClass('active');
         Shiny.onInputChange('currentTab', $('.active').data().value);
         });"
