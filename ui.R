@@ -739,6 +739,7 @@ argonTabItems(
                   )
               )
             ),
+            
             ### Class Preference ----
             tabPanel(
               "Class Characteristics",

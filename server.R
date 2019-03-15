@@ -418,17 +418,11 @@ server <- function(input, output) {
   
   ## Clustering Objects----
   
+  ### General Objects ----
+  
   obj.pca.conso = reactive({
     PCA(t(df.hedo()), graph = F)
   })
-  
-  
-  obj.hc = reactive({
-    distance = dist(t(df.hedo()), method = input$hclusterDist)
-    hc = hclust(distance, method = input$hclusterAgg)
-    return(hc)
-  })
-  
   
   classMeans = reactive({
     classMeans = NULL
@@ -444,10 +438,7 @@ server <- function(input, output) {
     paste("Average Score",round(classMeans(),3)) %>%matrix(nrow =nrow(classMeans()))
   })
   
-  obj.kmeans = reactive({
-    kmeans(t(df.hedo()), centers = input$kmeansNum, algorithm=input$kmeansAlgo)
-  })
-  
+  ### Classes ----
   obj.classes = reactive({
     if (input$clusterAlgo == "Hierarchical"){
       req(input$hclusterNum)
@@ -456,9 +447,47 @@ server <- function(input, output) {
     if (input$clusterAlgo == "K-Means"){
       classes = obj.kmeans()$cluster
     }
+    if (input$clusterAlgo == "DIANA"){
+      req(input$dianaNum)
+      classes= cutree(obj.diana(), k = input$dianaNum)
+    }
     return(classes)
   })
   
+  ### Hierarchical CLustering ----
+  obj.hc = reactive({
+    distance = dist(t(df.hedo()), method = input$hclusterDist)
+    hc = hclust(distance, method = input$hclusterAgg)
+    return(hc)
+  })
+  
+  ### K-means ----
+  obj.kmeans = reactive({
+    kmeans(t(df.hedo()), centers = input$kmeansNum, algorithm=input$kmeansAlgo)
+  })
+  
+  ### DIANA ----
+  obj.diana = reactive({
+    diana(t(df.hedo()),diss = input$dianaDiss, metric = input$dianaMetric, stand = input$dianaStand)
+  })
+  
+  ### CLARA ----
+  
+  ## Tabs ----
+  
+  observe({if (input$clusterAlgo=='Hierarchical') {
+    showTab(inputId = "tab-23",target = "Dendrogram",select=F)
+  }
+  else{
+    hideTab(inputId = "tab-23", target = "Dendrogram")
+  }
+  if (input$clusterAlgo=='Hierarchical' | input$clusterAlgo=='DIANA') {
+    showTab(inputId = "tab-23",target = "Inertia",select=T)
+    
+  }
+  else{
+    hideTab(inputId = "tab-23", target = "Inertia")
+  }})
   
   ## Inertia ----
   
