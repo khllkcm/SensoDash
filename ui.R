@@ -640,7 +640,7 @@ argonTabItems(
           selectInput(
             "clusterAlgo",
             "Clustering Algorithm",
-            choices = c("Hierarchical", "K-Means")
+            choices = c("Hierarchical", "K-Means","DIANA")
           ),
           checkboxInput("repel", "Repel", value = F),
           
@@ -702,6 +702,29 @@ argonTabItems(
             )
           )
           
+          ### DIANA inputs ----
+          ,conditionalPanel(
+            condition = "input.clusterAlgo=='DIANA'",
+            checkboxInput("dianaStand", "Standarize measurements", value = F),
+            checkboxInput("dianaDiss", "Calculate dissimilarity", value = T),
+            conditionalPanel(
+              condition = "input.dianaDiss",
+            selectInput(
+              "dianaMetric",
+              "Algorithm",
+              choices = c(
+                "euclidean", "manhattan"
+              )
+            )),
+            numericInput(
+              "dianaNum",
+              "Number of Clusters",
+              2,
+              min = 2,
+              max = 10,
+              step = 1
+            )
+          )
           
           
         ),
@@ -710,7 +733,18 @@ argonTabItems(
           tabsetPanel(
             id = "tab-23",
             ### Inertia ----
-            
+            tabPanel(
+              "Inertia",
+              argonColumn(
+                center = T,
+                plotOutput("inertia", height = "100%") %>%
+                  withSpinner(
+                    color = "#5e72e4",
+                    type = 7,
+                    proxy.height = "400px"
+                  )
+              )
+            ),
             
             ### Clusters ----
             

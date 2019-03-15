@@ -503,26 +503,20 @@ server <- function(input, output) {
         ylab("Inertia") +
         theme_minimal()
     }
+    if (input$clusterAlgo == "DIANA") {
+      ggplot(data.frame(
+        height = rev(obj.diana()$height),
+        class = seq(ncol(df.hedo()) - 1)
+      ),
+      aes(x = class, y = height)) +
+        geom_step(direction = 'vh') +
+        xlab("Number of Classes") +
+        ylab("Inertia") +
+        theme_minimal()
+    }
   }, height = 600, width = 600)
   
   ## Clusters ----
-  observe(if (input$clusterAlgo=='K-Means') {
-    removeTab(inputId = "tab-23", target = "Inertia")
-  }
-  else {
-    insertTab(inputId = "tab-23",tabPanel(
-      "Inertia",
-      argonColumn(
-        center = T,
-        plotOutput("inertia", height = "100%") %>%
-          withSpinner(
-            color = "#5e72e4",
-            type = 7,
-            proxy.height = "400px"
-          )
-      )
-    ),target = "Clusters",select=T)
-  })
   
   output$clusters = renderPlot({
       fviz_pca_ind(
