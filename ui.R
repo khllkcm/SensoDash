@@ -640,7 +640,7 @@ argonTabItems(
           selectInput(
             "clusterAlgo",
             "Clustering Algorithm",
-            choices = c("Hierarchical", "K-Means","DIANA")
+            choices = c("Hierarchical", "K-Means","DIANA","CLARA","PAM")
           ),
           checkboxInput("repel", "Repel", value = F),
           
@@ -705,17 +705,13 @@ argonTabItems(
           ### DIANA inputs ----
           ,conditionalPanel(
             condition = "input.clusterAlgo=='DIANA'",
-            checkboxInput("dianaStand", "Standarize measurements", value = F),
-            checkboxInput("dianaDiss", "Calculate dissimilarity", value = T),
-            conditionalPanel(
-              condition = "input.dianaDiss",
             selectInput(
               "dianaMetric",
-              "Algorithm",
+              "Metric",
               choices = c(
                 "euclidean", "manhattan"
               )
-            )),
+            ),
             numericInput(
               "dianaNum",
               "Number of Clusters",
@@ -726,6 +722,27 @@ argonTabItems(
             )
           )
           
+          ### CLARA inputs ----
+          ,conditionalPanel(
+            condition = "input.clusterAlgo=='CLARA'",
+            selectInput(
+              "claraMetric",
+              "Metric",
+              choices = c(
+                "euclidean", "manhattan","jaccard"
+              )
+            ),
+            numericInput(
+              "claraNum",
+              "Number of Clusters",
+              2,
+              min = 2,
+              max = 10,
+              step = 1
+            )
+          ),
+          argonRow(center = T,
+                   actionButton(inputId="run","Run"))
           
         ),
         argonColumn(
@@ -784,16 +801,7 @@ argonTabItems(
                     color = "#5e72e4",
                     type = 7,
                     proxy.height = "400px"
-                  ),
-                div(
-                  style = 'overflow-x: scroll',
-                  dataTableOutput("productCharac") %>%
-                    withSpinner(
-                      color = "#5e72e4",
-                      type = 7,
-                      proxy.height = "400px"
-                    )
-                )
+                  )
               )
             )
             

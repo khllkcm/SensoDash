@@ -1,6 +1,6 @@
-server <- function(input, output) {
+server <- function(input, output, session) {
   ## Dataset Hedo ----
-  
+  test=T
   df.hedoForDisplay = reactive({
     req(input$fileHedo)
     validate(need(
@@ -30,7 +30,8 @@ server <- function(input, output) {
   })
   
   df.hedo = eventReactive(input$validateHedo,{
-    #return(read.csv("hedo.csv", sep = ';', row.names = 1))
+    if(test)
+      return(read.csv("hedo.csv", sep = ';', row.names = 1))
     req(input$fileHedo)
     validate(need(
       file_ext(input$fileHedo$name) %in% c(
@@ -115,7 +116,8 @@ server <- function(input, output) {
   })
   
   df.senso = eventReactive(input$validateSenso,{
-    #return(read.csv("senso.csv"))
+    if (test)
+      return(read.csv("senso.csv"))
     req(input$sensoSession)
     req(input$sensoJudge)
     req(input$sensoProduct)
@@ -438,6 +440,8 @@ server <- function(input, output) {
     paste("Average Score",round(classMeans(),3)) %>%matrix(nrow =nrow(classMeans()))
   })
   
+  observeEvent(input$clusterAlgo,invalidateLater(1000,session))
+  
   ### Classes ----
   obj.classes = reactive({
     if (input$clusterAlgo == "Hierarchical"){
@@ -450,6 +454,9 @@ server <- function(input, output) {
     if (input$clusterAlgo == "DIANA"){
       req(input$dianaNum)
       classes= cutree(obj.diana(), k = input$dianaNum)
+    }
+    if (input$clusterAlgo == "CLARA"){
+      classes = obj.clara()$clustering
     }
     return(classes)
   })
@@ -468,11 +475,13 @@ server <- function(input, output) {
   
   ### DIANA ----
   obj.diana = reactive({
-    diana(t(df.hedo()),diss = input$dianaDiss, metric = input$dianaMetric, stand = input$dianaStand)
+    diana(t(df.hedo()),diss = F, metric = input$dianaMetric)
   })
   
   ### CLARA ----
-  
+  obj.clara = reactive({
+    clara(t(df.hedo()), metric = input$claraMetric, k=input$claraNum)
+  })
   ## Tabs ----
   
   observe({if (input$clusterAlgo=='Hierarchical') {
@@ -491,84 +500,105 @@ server <- function(input, output) {
   
   ## Inertia ----
   
-  output$inertia = renderPlot({
+  inertia = eventReactive(input$run,{
     if (input$clusterAlgo == "Hierarchical") {
-      ggplot(data.frame(
-        height = rev(obj.hc()$height),
-        class = seq(ncol(df.hedo()) - 1)
-      ),
-      aes(x = class, y = height)) +
-        geom_step(direction = 'vh') +
-        xlab("Number of Classes") +
-        ylab("Inertia") +
-        theme_minimal()
+      return(
+        ggplot(data.frame(
+          height = rev(isolate(obj.hc())$height),
+          class = seq(ncol(df.hedo()) - 1)
+        ),
+        aes(x = class, y = height)) +
+          geom_step(direction = 'vh') +
+          xlab("Number of Classes") +
+          ylab("Inertia") +
+          theme_minimal()
+      )
     }
     if (input$clusterAlgo == "DIANA") {
-      ggplot(data.frame(
-        height = rev(obj.diana()$height),
-        class = seq(ncol(df.hedo()) - 1)
-      ),
-      aes(x = class, y = height)) +
-        geom_step(direction = 'vh') +
-        xlab("Number of Classes") +
-        ylab("Inertia") +
-        theme_minimal()
+      return(
+        ggplot(data.frame(
+          height = rev(isolate(obj.diana())$height),
+          class = seq(ncol(df.hedo()) - 1)
+        ),
+        aes(x = isolate(class), y = isolate(height))) +
+          geom_step(direction = 'vh') +
+          xlab("Number of Classes") +
+          ylab("Inertia") +
+          theme_minimal()
+      )
     }
-  }, height = 600, width = 600)
+  })
+  observeEvent(input$clusterAlgo,{output$inertia<-renderPlot(NULL,height=100,width=100)})
+  observeEvent(input$run,{output$inertia <-renderPlot(inertia(), height = 600, width = 600)})
   
   ## Clusters ----
   
-  output$clusters = renderPlot({
-      fviz_pca_ind(
-        obj.pca.conso(),
-        repel = input$repel,
-        habillage = as.factor(obj.classes()),
-        ellipse.type = "convex",
-        addEllipses = T
-      )
-    
-  }, height = 600, width = 600)
+  clusters = eventReactive(input$run,{
+    fviz_pca_ind(
+      obj.pca.conso(),
+      repel = input$repel,
+      habillage = as.factor(isolate(obj.classes())),
+      ellipse.type = "convex",
+      addEllipses = T
+    )
+  
+  })
+  observeEvent(input$clusterAlgo,{output$clusters<-renderPlot(NULL,height=100,width=100)})
+  observeEvent(input$run,{output$clusters<-renderPlot(clusters(), height = 600, width = 600)})
   
   ## Dendogram ----
-  
-  output$dendrogram = renderPlot({
+  dendrogram = eventReactive(input$run,{
+    input$run
     if (input$clusterAlgo == "Hierarchical")
-      fviz_dend(obj.hc(), color_labels_by_k = TRUE)
-  }, height = 600, width = 600)
+      fviz_dend(isolate(obj.hc()), color_labels_by_k = TRUE)
+  })
+  
+  observeEvent(input$clusterAlgo,{output$dendrogram<-renderPlot(NULL,height=100,width=100)})
+  observeEvent(input$run,{output$dendrogram<-renderPlot(dendrogram(), height = 600, width = 600)})
   
   ## Class Preference ----
-  
-  output$classCharac = renderPlotly({
+  classes = eventReactive(input$run,{
     plot_ly(
-      x = as.factor(unique(obj.classes())),
-      y = rownames(classMeans()),
-      z = classMeans(),
+      x = as.factor(unique(isolate(obj.classes()))),
+      y = rownames(isolate(classMeans())),
+      z = isolate(classMeans()),
       type = "heatmap",
       source = "heatplot",
       xgap = 5,
       ygap = 1,
       hoverinfo="text",
-      text=classMeansText()
+      text=isolate(classMeansText())
     ) %>%
       layout(xaxis = list(title = "", dtick = 1),
              yaxis = list(title = ""))
   })
   
+  output$classCharac = renderPlotly(classes())
+  observeEvent(input$clusterAlgo, {
+    output$classCharac = renderPlotly({
+      plotly_empty(type = "scatter", mode =
+                     "markers")
+    })
+  })
+  observeEvent(input$run,{output$classCharac = renderPlotly(classes())})
   
-  output$productCharac <- renderDataTable({
-    s <- event_data("plotly_click", source = "heatplot")
-    if (length(s)) {
-      table = t(getPCA(df.senso())$X[unlist(s[["pointNumber"]])[1] + 1, -1]) %>%
-        round(3)%>%
-        as.data.frame() %>%
-        rownames_to_column(var = paste(s[["y"]], "Characteristics"))
-      colnames(table)[2] = "Average Judge Score"
-      return(table)
-    } else {
-      
-    }
-  }, options = list(processing = FALSE))
+  clicked <- reactive({
+    event_data("plotly_click", source = "heatplot")
+  })
+  
+  observeEvent(clicked(), {
+    table = t(getPCA(df.senso())$X[unlist(clicked()[["pointNumber"]])[1] + 1, -1]) %>%
+      round(3) %>%
+      as.data.frame() %>%
+      rownames_to_column(var = paste(clicked()[["y"]], "Characteristics"))
+    colnames(table)[2] = "Average Judge Score"
+    showModal(modalDialog(renderDataTable(table)))
+  })
   
   
+  
+  
+  
+
 }
 
