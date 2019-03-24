@@ -748,7 +748,7 @@ argonTabItems(
             tabPanel("Inertia",
                      argonColumn(
                        center = T,
-                       plotOutput("inertia", height = "100%") %>%
+                       plotlyOutput("inertia", height = "100%") %>%
                          withSpinner(
                            color = "#5e72e4",
                            type = 7,

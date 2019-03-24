@@ -516,40 +516,30 @@ server <- function(input, output, session) {
   inertia = eventReactive(input$run, {
     if (input$clusterAlgo == "Hierarchical") {
       return(
-        ggplot(
+        plot_ly(
           data.frame(
             height = rev(isolate(obj.hc())$height),
             class = seq(ncol(df.hedo()) - 1)
           ),
-          aes(x = class, y = height)
-        ) +
-          geom_step(direction = 'vh') +
-          xlab("Number of Classes") +
-          ylab("Inertia") +
-          theme_minimal()
+          x = ~class) %>% add_lines(y = ~height, name = "hv", line = list(shape = "hv"))
       )
     }
     if (input$clusterAlgo == "DIANA") {
       return(
-        ggplot(
+        plot_ly(
           data.frame(
             height = rev(isolate(obj.diana())$height),
             class = seq(ncol(df.hedo()) - 1)
           ),
-          aes(x = isolate(class), y = isolate(height))
-        ) +
-          geom_step(direction = 'vh') +
-          xlab("Number of Classes") +
-          ylab("Inertia") +
-          theme_minimal()
+          x = ~class) %>% add_lines(y = ~height, name = "hv", line = list(shape = "hv"))
       )
     }
   })
   observeEvent(input$clusterAlgo, {
-    output$inertia <- renderPlot(NULL, height = 100, width = 100)
+    output$inertia <- renderPlotly(NULL)
   })
   observeEvent(input$run, {
-    output$inertia <- renderPlot(inertia(), height = 600, width = 600)
+    output$inertia <- renderPlotly(inertia())
   })
   
   ## Clusters ----
@@ -596,7 +586,7 @@ server <- function(input, output, session) {
       type = "heatmap",
       source = "heatplot",
       xgap = 5,
-      ygap = 1,
+      ygap = 3,
       hoverinfo = "text",
       text = isolate(classMeansText())
     ) %>%
@@ -627,10 +617,5 @@ server <- function(input, output, session) {
     colnames(table)[2] = "Average Judge Score"
     showModal(modalDialog(renderDataTable(table)))
   })
-  
-  
-  
-  
-  
   
 }
