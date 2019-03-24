@@ -1,6 +1,6 @@
 server <- function(input, output, session) {
   ## Dataset Hedo ----
-  test=T
+  test = T
   df.hedoForDisplay = reactive({
     req(input$fileHedo)
     validate(need(
@@ -29,8 +29,8 @@ server <- function(input, output, session) {
     }
   })
   
-  df.hedo = eventReactive(input$validateHedo,{
-    if(test)
+  df.hedo = eventReactive(input$validateHedo, {
+    if (test)
       return(read.csv("hedo.csv", sep = ';', row.names = 1))
     req(input$fileHedo)
     validate(need(
@@ -115,7 +115,7 @@ server <- function(input, output, session) {
     }
   })
   
-  df.senso = eventReactive(input$validateSenso,{
+  df.senso = eventReactive(input$validateSenso, {
     if (test)
       return(read.csv("senso.csv"))
     req(input$sensoSession)
@@ -429,7 +429,7 @@ server <- function(input, output, session) {
   classMeans = reactive({
     classMeans = NULL
     for (class in unique(obj.classes())) {
-      classMeans = cbind(classMeans,df.hedo()[, which(obj.classes() == class)] %>% 
+      classMeans = cbind(classMeans, df.hedo()[, which(obj.classes() == class)] %>%
                            as.data.frame() %>% rowMeans())
     }
     rownames(classMeans) = rownames(df.hedo())
@@ -437,25 +437,25 @@ server <- function(input, output, session) {
   })
   
   classMeansText = reactive({
-    paste("Average Score",round(classMeans(),3)) %>%matrix(nrow =nrow(classMeans()))
+    paste("Average Score", round(classMeans(), 3)) %>% matrix(nrow = nrow(classMeans()))
   })
   
-  observeEvent(input$clusterAlgo,invalidateLater(1000,session))
+  observeEvent(input$clusterAlgo, invalidateLater(1000, session))
   
   ### Classes ----
   obj.classes = reactive({
-    if (input$clusterAlgo == "Hierarchical"){
+    if (input$clusterAlgo == "Hierarchical") {
       req(input$hclusterNum)
-      classes= cutree(obj.hc(), k = input$hclusterNum)
+      classes = cutree(obj.hc(), k = input$hclusterNum)
     }
-    if (input$clusterAlgo == "K-Means"){
+    if (input$clusterAlgo == "K-Means") {
       classes = obj.kmeans()$cluster
     }
-    if (input$clusterAlgo == "DIANA"){
+    if (input$clusterAlgo == "DIANA") {
       req(input$dianaNum)
-      classes= cutree(obj.diana(), k = input$dianaNum)
+      classes = cutree(obj.diana(), k = input$dianaNum)
     }
-    if (input$clusterAlgo == "CLARA"){
+    if (input$clusterAlgo == "CLARA") {
       classes = obj.clara()$clustering
     }
     return(classes)
@@ -470,44 +470,59 @@ server <- function(input, output, session) {
   
   ### K-means ----
   obj.kmeans = reactive({
-    kmeans(t(df.hedo()), centers = input$kmeansNum, algorithm=input$kmeansAlgo)
+    kmeans(t(df.hedo()),
+           centers = input$kmeansNum,
+           algorithm = input$kmeansAlgo)
   })
   
   ### DIANA ----
   obj.diana = reactive({
-    diana(t(df.hedo()),diss = F, metric = input$dianaMetric)
+    diana(t(df.hedo()),
+          diss = F,
+          metric = input$dianaMetric)
   })
   
   ### CLARA ----
   obj.clara = reactive({
-    clara(t(df.hedo()), metric = input$claraMetric, k=input$claraNum)
+    clara(t(df.hedo()),
+          metric = input$claraMetric,
+          k = input$claraNum)
   })
   ## Tabs ----
   
-  observe({if (input$clusterAlgo=='Hierarchical') {
-    showTab(inputId = "tab-23",target = "Dendrogram",select=F)
-  }
-  else{
-    hideTab(inputId = "tab-23", target = "Dendrogram")
-  }
-  if (input$clusterAlgo=='Hierarchical' | input$clusterAlgo=='DIANA') {
-    showTab(inputId = "tab-23",target = "Inertia",select=T)
-    
-  }
-  else{
-    hideTab(inputId = "tab-23", target = "Inertia")
-  }})
+  observe({
+    if (input$clusterAlgo == 'Hierarchical') {
+      showTab(inputId = "tab-23",
+              target = "Dendrogram",
+              select = F)
+    }
+    else{
+      hideTab(inputId = "tab-23", target = "Dendrogram")
+    }
+    if (input$clusterAlgo == 'Hierarchical' |
+        input$clusterAlgo == 'DIANA') {
+      showTab(inputId = "tab-23",
+              target = "Inertia",
+              select = T)
+      
+    }
+    else{
+      hideTab(inputId = "tab-23", target = "Inertia")
+    }
+  })
   
   ## Inertia ----
   
-  inertia = eventReactive(input$run,{
+  inertia = eventReactive(input$run, {
     if (input$clusterAlgo == "Hierarchical") {
       return(
-        ggplot(data.frame(
-          height = rev(isolate(obj.hc())$height),
-          class = seq(ncol(df.hedo()) - 1)
-        ),
-        aes(x = class, y = height)) +
+        ggplot(
+          data.frame(
+            height = rev(isolate(obj.hc())$height),
+            class = seq(ncol(df.hedo()) - 1)
+          ),
+          aes(x = class, y = height)
+        ) +
           geom_step(direction = 'vh') +
           xlab("Number of Classes") +
           ylab("Inertia") +
@@ -516,11 +531,13 @@ server <- function(input, output, session) {
     }
     if (input$clusterAlgo == "DIANA") {
       return(
-        ggplot(data.frame(
-          height = rev(isolate(obj.diana())$height),
-          class = seq(ncol(df.hedo()) - 1)
-        ),
-        aes(x = isolate(class), y = isolate(height))) +
+        ggplot(
+          data.frame(
+            height = rev(isolate(obj.diana())$height),
+            class = seq(ncol(df.hedo()) - 1)
+          ),
+          aes(x = isolate(class), y = isolate(height))
+        ) +
           geom_step(direction = 'vh') +
           xlab("Number of Classes") +
           ylab("Inertia") +
@@ -528,12 +545,16 @@ server <- function(input, output, session) {
       )
     }
   })
-  observeEvent(input$clusterAlgo,{output$inertia<-renderPlot(NULL,height=100,width=100)})
-  observeEvent(input$run,{output$inertia <-renderPlot(inertia(), height = 600, width = 600)})
+  observeEvent(input$clusterAlgo, {
+    output$inertia <- renderPlot(NULL, height = 100, width = 100)
+  })
+  observeEvent(input$run, {
+    output$inertia <- renderPlot(inertia(), height = 600, width = 600)
+  })
   
   ## Clusters ----
   
-  clusters = eventReactive(input$run,{
+  clusters = eventReactive(input$run, {
     fviz_pca_ind(
       obj.pca.conso(),
       repel = input$repel,
@@ -541,33 +562,43 @@ server <- function(input, output, session) {
       ellipse.type = "convex",
       addEllipses = T
     )
-  
+    
   })
-  observeEvent(input$clusterAlgo,{output$clusters<-renderPlot(NULL,height=100,width=100)})
-  observeEvent(input$run,{output$clusters<-renderPlot(clusters(), height = 600, width = 600)})
+  observeEvent(input$clusterAlgo, {
+    output$clusters <- renderPlot(NULL, height = 100, width = 100)
+  })
+  observeEvent(input$run, {
+    output$clusters <- renderPlot(clusters(), height = 600, width = 600)
+  })
   
   ## Dendogram ----
-  dendrogram = eventReactive(input$run,{
+  dendrogram = eventReactive(input$run, {
     input$run
     if (input$clusterAlgo == "Hierarchical")
       fviz_dend(isolate(obj.hc()), color_labels_by_k = TRUE)
   })
   
-  observeEvent(input$clusterAlgo,{output$dendrogram<-renderPlot(NULL,height=100,width=100)})
-  observeEvent(input$run,{output$dendrogram<-renderPlot(dendrogram(), height = 600, width = 600)})
+  observeEvent(input$clusterAlgo, {
+    output$dendrogram <- renderPlot(NULL, height = 100, width = 100)
+  })
+  observeEvent(input$run, {
+    output$dendrogram <-
+      renderPlot(dendrogram(), height = 600, width = 600)
+  })
   
   ## Class Preference ----
-  classes = eventReactive(input$run,{
+  classes = eventReactive(input$run, {
     plot_ly(
-      x = as.factor(unique(isolate(obj.classes()))),
+      x = as.factor(unique(isolate(obj.classes(
+      )))),
       y = rownames(isolate(classMeans())),
       z = isolate(classMeans()),
       type = "heatmap",
       source = "heatplot",
       xgap = 5,
       ygap = 1,
-      hoverinfo="text",
-      text=isolate(classMeansText())
+      hoverinfo = "text",
+      text = isolate(classMeansText())
     ) %>%
       layout(xaxis = list(title = "", dtick = 1),
              yaxis = list(title = ""))
@@ -580,7 +611,9 @@ server <- function(input, output, session) {
                      "markers")
     })
   })
-  observeEvent(input$run,{output$classCharac = renderPlotly(classes())})
+  observeEvent(input$run, {
+    output$classCharac = renderPlotly(classes())
+  })
   
   clicked <- reactive({
     event_data("plotly_click", source = "heatplot")
@@ -599,6 +632,5 @@ server <- function(input, output, session) {
   
   
   
-
+  
 }
-

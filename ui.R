@@ -67,7 +67,7 @@ ui <- argonDashPage(
   body = argonDashBody(
     ## CSS ----
     tags$head(
-      tags$link(rel = "stylesheet", type = "text/css", 
+      tags$link(rel = "stylesheet", type = "text/css",
                 href = "style.css"),
       ## JS ----
       tags$script(
@@ -159,7 +159,7 @@ argonTabItems(
               )
             ),
             argonColumn(
-              center=T,
+              center = T,
               actionButton("validateHedo", "Validate Hedonic Dataset")
             )
           ),
@@ -248,7 +248,7 @@ argonTabItems(
             uiOutput("selectSensoJudge"),
             uiOutput("selectSensoProduct"),
             argonColumn(
-              center=T,
+              center = T,
               actionButton("validateSenso", "Validate Sensory Dataset")
             )
           ),
@@ -640,7 +640,7 @@ argonTabItems(
           selectInput(
             "clusterAlgo",
             "Clustering Algorithm",
-            choices = c("Hierarchical", "K-Means","DIANA","CLARA","PAM")
+            choices = c("Hierarchical", "K-Means", "DIANA", "CLARA", "PAM")
           ),
           checkboxInput("repel", "Repel", value = F),
           
@@ -683,14 +683,13 @@ argonTabItems(
             )
           )
           ### K-means inputs ----
-          ,conditionalPanel(
+          ,
+          conditionalPanel(
             condition = "input.clusterAlgo=='K-Means'",
             selectInput(
               "kmeansAlgo",
               "Algorithm",
-              choices = c(
-                "Hartigan-Wong", "Lloyd", "Forgy","MacQueen"
-              )
+              choices = c("Hartigan-Wong", "Lloyd", "Forgy", "MacQueen")
             ),
             numericInput(
               "kmeansNum",
@@ -703,15 +702,12 @@ argonTabItems(
           )
           
           ### DIANA inputs ----
-          ,conditionalPanel(
+          ,
+          conditionalPanel(
             condition = "input.clusterAlgo=='DIANA'",
-            selectInput(
-              "dianaMetric",
-              "Metric",
-              choices = c(
-                "euclidean", "manhattan"
-              )
-            ),
+            selectInput("dianaMetric",
+                        "Metric",
+                        choices = c("euclidean", "manhattan")),
             numericInput(
               "dianaNum",
               "Number of Clusters",
@@ -723,14 +719,13 @@ argonTabItems(
           )
           
           ### CLARA inputs ----
-          ,conditionalPanel(
+          ,
+          conditionalPanel(
             condition = "input.clusterAlgo=='CLARA'",
             selectInput(
               "claraMetric",
               "Metric",
-              choices = c(
-                "euclidean", "manhattan","jaccard"
-              )
+              choices = c("euclidean", "manhattan", "jaccard")
             ),
             numericInput(
               "claraNum",
@@ -742,7 +737,7 @@ argonTabItems(
             )
           ),
           argonRow(center = T,
-                   actionButton(inputId="run","Run"))
+                   actionButton(inputId = "run", "Run"))
           
         ),
         argonColumn(
@@ -750,18 +745,16 @@ argonTabItems(
           tabsetPanel(
             id = "tab-23",
             ### Inertia ----
-            tabPanel(
-              "Inertia",
-              argonColumn(
-                center = T,
-                plotOutput("inertia", height = "100%") %>%
-                  withSpinner(
-                    color = "#5e72e4",
-                    type = 7,
-                    proxy.height = "400px"
-                  )
-              )
-            ),
+            tabPanel("Inertia",
+                     argonColumn(
+                       center = T,
+                       plotOutput("inertia", height = "100%") %>%
+                         withSpinner(
+                           color = "#5e72e4",
+                           type = 7,
+                           proxy.height = "400px"
+                         )
+                     )),
             
             ### Clusters ----
             
