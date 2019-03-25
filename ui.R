@@ -549,12 +549,6 @@ argonTabItems(
         argonRow(
           argonColumn(
             width = 3,
-            selectInput(
-              "modelFormulaPref",
-              label = "Formula",
-              choices = c("Vector", "Circular", "Elliptic", "Quadratic"),
-              selected = "Quadratic"
-            ),
             checkboxInput("pref3D", "3D Plot", FALSE),
             conditionalPanel(
               condition = "!input.pref3D",
