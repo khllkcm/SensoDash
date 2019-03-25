@@ -20,10 +20,9 @@ library(metR)
 library(fields)
 library(plotly)
 
-getPCA = function(df.senso) {
-  df.X = summaryBy(
-    . ~ produit,
-    data = df.senso[, -c(1:2)],
+getPCA = function(df.senso,product,judge,session) {
+  df.X = summaryBy(as.formula(paste(".", product, sep = "~")),
+    data =  df.senso[,-which(names(df.senso) %in% c(judge, session))],
     FUN = c(mean),
     na.rm = T,
     keep.names = T
@@ -32,10 +31,10 @@ getPCA = function(df.senso) {
   return(list(PCA=res.pca,X=df.X))
 }
 
-mapWithPCA = function(df.senso, df.hedo, x = 2) {
-  obj.pca = getPCA(df.senso)$PCA
-  pcs = obj.pca$ind$coord[, 1:x]
-  colnames(pcs) = paste0('PC', seq(x))
+mapWithPCA = function(df.senso, df.hedo,product,judge,session) {
+  obj.pca = getPCA(df.senso,product,judge,session)$PCA
+  pcs = obj.pca$ind$coord[, 1:2]
+  colnames(pcs) = paste0('PC', seq(2))
   map = cbind.data.frame(df.hedo, pcs)
   return(map)
 }

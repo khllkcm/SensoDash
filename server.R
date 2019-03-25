@@ -1,6 +1,6 @@
 server <- function(input, output, session) {
   ## Dataset Hedo ----
-  test = T
+  test = F
   df.hedoForDisplay = reactive({
     req(input$fileHedo)
     validate(need(
@@ -209,7 +209,10 @@ server <- function(input, output, session) {
   
   ## PCA ----
   obj.pca = reactive({
-    res.PCA = getPCA(df.senso())$PCA
+    req(input$sensoProduct)
+    req(input$sensoJudge)
+    req(input$sensoSession)
+    res.PCA = getPCA(df.senso(),input$sensoProduct,input$sensoJudge, input$sensoSession)$PCA
     if (!is.null(input$fileHedo))
       rownames(res.PCA$ind$coord) = rownames(df.hedo())
     return(res.PCA)
@@ -281,7 +284,7 @@ server <- function(input, output, session) {
   mapBisc <- reactive({
     req(input$currentTab)
     if (input$currentTab != "data")
-      mapWithPCA(df.senso(), df.hedo())
+      mapWithPCA(df.senso(), df.hedo(),input$sensoProduct,input$sensoJudge, input$sensoSession)
   })
   
   fittedModels <- reactive({
@@ -610,7 +613,7 @@ server <- function(input, output, session) {
   })
   
   observeEvent(clicked(), {
-    table = t(getPCA(df.senso())$X[unlist(clicked()[["pointNumber"]])[1] + 1, -1]) %>%
+    table = t(getPCA(df.senso(),input$sensoProduct,input$sensoJudge, input$sensoSession)$X[unlist(clicked()[["pointNumber"]])[1] + 1, -1]) %>%
       round(3) %>%
       as.data.frame() %>%
       rownames_to_column(var = paste(clicked()[["y"]], "Characteristics"))
