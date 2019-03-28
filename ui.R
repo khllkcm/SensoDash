@@ -166,15 +166,12 @@ argonTabItems(
           argonColumn(
             center = T,
             width = 9,
-            div(
-              style = 'overflow-x: scroll',
-              dataTableOutput("contentsHedo") %>%
-                withSpinner(
-                  color = "#5e72e4",
-                  type = 7,
-                  proxy.height = "400px"
-                )
-            )
+            dataTableOutput("contentsHedo") %>%
+              withSpinner(
+                color = "#5e72e4",
+                type = 7,
+                proxy.height = "400px"
+              )
           )
         )
       ),
@@ -255,15 +252,12 @@ argonTabItems(
           argonColumn(
             center = T,
             width = 9,
-            div(
-              style = 'overflow-x: scroll',
-              dataTableOutput("contentsSenso") %>%
-                withSpinner(
-                  color = "#5e72e4",
-                  type = 7,
-                  proxy.height = "400px"
-                )
-            )
+            dataTableOutput("contentsSenso") %>%
+              withSpinner(
+                color = "#5e72e4",
+                type = 7,
+                proxy.height = "400px"
+              )
           )
         )
       )
@@ -739,16 +733,18 @@ argonTabItems(
           tabsetPanel(
             id = "tab-23",
             ### Inertia ----
-            tabPanel("Inertia",
-                     argonColumn(
-                       center = T,
-                       plotlyOutput("inertia", height = "100%") %>%
-                         withSpinner(
-                           color = "#5e72e4",
-                           type = 7,
-                           proxy.height = "400px"
-                         )
-                     )),
+            tabPanel(
+              "Inertia",
+              argonColumn(
+                center = T,
+                plotlyOutput("inertia", height = "100%") %>%
+                  withSpinner(
+                    color = "#5e72e4",
+                    type = 7,
+                    proxy.height = "400px"
+                  )
+              )
+            ),
             
             ### Clusters ----
             

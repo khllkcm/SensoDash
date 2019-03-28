@@ -56,8 +56,8 @@ server <- function(input, output, session) {
   
   ## Display Dataset Hedo ----
   output$contentsHedo <- renderDataTable({
-    df.hedoForDisplay()
-  }, options = list(processing = FALSE))
+    datatable(df.hedoForDisplay(),options = list(scrollX = TRUE, processing = FALSE))
+  })
   
   ## Dataset Senso ----
   
@@ -146,8 +146,8 @@ server <- function(input, output, session) {
   
   ## Display Dataset Senso ----
   output$contentsSenso <- renderDataTable({
-    df.sensoForDisplay()
-  }, options = list(processing = FALSE))
+    datatable(df.sensoForDisplay(),options = list(scrollX = TRUE, processing = FALSE))
+  })
   
   ## ANOVA ----
   output$selectAnovaVar = renderUI(selectInput(
