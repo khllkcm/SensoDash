@@ -2,9 +2,9 @@ library(shiny)
 library(argonR)
 library(argonDash)
 library(shinycssloaders)
-library(colourpicker)
 library(DT)
 library(factoextra)
+library(shinyjs)
 library(shinyalert)
 library(tools)
 library(tibble)
@@ -19,20 +19,23 @@ library(tibble)
 library(metR)
 library(fields)
 library(plotly)
+library(cluster)
+library(kohonen)
 
-getPCA = function(df.senso,product,judge,session) {
-  df.X = summaryBy(as.formula(paste(".", product, sep = "~")),
-    data =  df.senso[,-which(names(df.senso) %in% c(judge, session))],
+getPCA = function(df.senso, product, judge, session) {
+  df.X = summaryBy(
+    as.formula(paste(".", product, sep = "~")),
+    data =  df.senso[, -which(names(df.senso) %in% c(judge, session))],
     FUN = c(mean),
     na.rm = T,
     keep.names = T
   )
   res.pca = PCA(df.X[, -1], graph = F)
-  return(list(PCA=res.pca,X=df.X))
+  return(list(PCA = res.pca, X = df.X))
 }
 
-mapWithPCA = function(df.senso, df.hedo,product,judge,session) {
-  obj.pca = getPCA(df.senso,product,judge,session)$PCA
+mapWithPCA = function(df.senso, df.hedo, product, judge, session) {
+  obj.pca = getPCA(df.senso, product, judge, session)$PCA
   pcs = obj.pca$ind$coord[, 1:2]
   colnames(pcs) = paste0('PC', seq(2))
   map = cbind.data.frame(df.hedo, pcs)
