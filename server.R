@@ -56,7 +56,8 @@ server <- function(input, output, session) {
   
   ## Display Dataset Hedo ----
   output$contentsHedo <- renderDataTable({
-    datatable(df.hedoForDisplay(),options = list(scrollX = TRUE, processing = FALSE))
+    datatable(df.hedoForDisplay(),
+              options = list(scrollX = TRUE, processing = FALSE))
   })
   
   ## Dataset Senso ----
@@ -146,7 +147,8 @@ server <- function(input, output, session) {
   
   ## Display Dataset Senso ----
   output$contentsSenso <- renderDataTable({
-    datatable(df.sensoForDisplay(),options = list(scrollX = TRUE, processing = FALSE))
+    datatable(df.sensoForDisplay(),
+              options = list(scrollX = TRUE, processing = FALSE))
   })
   
   ## ANOVA ----
@@ -212,7 +214,10 @@ server <- function(input, output, session) {
     req(input$sensoProduct)
     req(input$sensoJudge)
     req(input$sensoSession)
-    res.PCA = getPCA(df.senso(),input$sensoProduct,input$sensoJudge, input$sensoSession)$PCA
+    res.PCA = getPCA(df.senso(),
+                     input$sensoProduct,
+                     input$sensoJudge,
+                     input$sensoSession)$PCA
     if (!is.null(input$fileHedo))
       rownames(res.PCA$ind$coord) = rownames(df.hedo())
     return(res.PCA)
@@ -284,7 +289,13 @@ server <- function(input, output, session) {
   mapBisc <- reactive({
     req(input$currentTab)
     if (input$currentTab != "data")
-      mapWithPCA(df.senso(), df.hedo(),input$sensoProduct,input$sensoJudge, input$sensoSession)
+      mapWithPCA(
+        df.senso(),
+        df.hedo(),
+        input$sensoProduct,
+        input$sensoJudge,
+        input$sensoSession
+      )
   })
   
   fittedModels <- reactive({
@@ -342,7 +353,8 @@ server <- function(input, output, session) {
       )
   })
   
-  output$mapPlot = renderPlot({
+  
+  mapPredPlot = reactive({
     req(input$predContourStep)
     req(input$predNbPoints)
     plotMap(
@@ -359,6 +371,10 @@ server <- function(input, output, session) {
       contour.col = input$predContourColor,
       prod.col = input$predProdColor
     )
+  })
+  
+  output$mapPlot = renderPlot({
+    mapPredPlot()
   }, height = 600, width = 600)
   
   output$mapPlotly = renderPlotly({
@@ -390,7 +406,7 @@ server <- function(input, output, session) {
     }, prefPredictedScores(), df.hedo()) %>% as.data.frame()
   })
   
-  output$mapPrefPlot = renderPlot({
+  mapPrefPlot = reactive({
     req(input$prefContourStep)
     req(input$prefNbPoints)
     plotMap(
@@ -408,6 +424,10 @@ server <- function(input, output, session) {
       contour.col = input$prefContourColor,
       prod.col = input$prefProdColor
     )
+  })
+  
+  output$mapPrefPlot = renderPlot({
+    mapPrefPlot()
   }, height = 600, width = 600)
   
   
@@ -491,6 +511,15 @@ server <- function(input, output, session) {
           metric = input$claraMetric,
           k = input$claraNum)
   })
+  
+  ### PAM ----
+  obj.pam = reactive({
+    pam(t(df.hedo()),
+          metric = input$pamMetric,
+          k = input$pamNum)
+  })
+  
+  
   ## Tabs ----
   
   observe({
@@ -519,22 +548,28 @@ server <- function(input, output, session) {
   inertia = eventReactive(input$run, {
     if (input$clusterAlgo == "Hierarchical") {
       return(
-        plot_ly(
-          data.frame(
-            height = rev(isolate(obj.hc())$height),
-            class = seq(ncol(df.hedo()) - 1)
-          ),
-          x = ~class) %>% add_lines(y = ~height, name = "hv", line = list(shape = "hv"))
+        plot_ly(data.frame(
+          height = rev(isolate(obj.hc())$height),
+          class = seq(ncol(df.hedo()) - 1)
+        ),
+        x = ~ class) %>% add_lines(
+          y = ~ height,
+          name = "hv",
+          line = list(shape = "hv")
+        )
       )
     }
     if (input$clusterAlgo == "DIANA") {
       return(
-        plot_ly(
-          data.frame(
-            height = rev(isolate(obj.diana())$height),
-            class = seq(ncol(df.hedo()) - 1)
-          ),
-          x = ~class) %>% add_lines(y = ~height, name = "hv", line = list(shape = "hv"))
+        plot_ly(data.frame(
+          height = rev(isolate(obj.diana())$height),
+          class = seq(ncol(df.hedo()) - 1)
+        ),
+        x = ~ class) %>% add_lines(
+          y = ~ height,
+          name = "hv",
+          line = list(shape = "hv")
+        )
       )
     }
   })
@@ -583,6 +618,7 @@ server <- function(input, output, session) {
   classes = eventReactive(input$run, {
     plot_ly(
       x = as.factor(unique(isolate(obj.classes(
+        
       )))),
       y = rownames(isolate(classMeans())),
       z = isolate(classMeans()),
@@ -613,12 +649,37 @@ server <- function(input, output, session) {
   })
   
   observeEvent(clicked(), {
-    table = t(getPCA(df.senso(),input$sensoProduct,input$sensoJudge, input$sensoSession)$X[unlist(clicked()[["pointNumber"]])[1] + 1, -1]) %>%
+    table = t(
+      getPCA(
+        df.senso(),
+        input$sensoProduct,
+        input$sensoJudge,
+        input$sensoSession
+      )$X[unlist(clicked()[["pointNumber"]])[1] + 1, -1]
+    ) %>%
       round(3) %>%
       as.data.frame() %>%
       rownames_to_column(var = paste(clicked()[["y"]], "Characteristics"))
     colnames(table)[2] = "Average Judge Score"
-    showModal(modalDialog(renderDataTable(table)))
+    showModal(modalDialog(renderDataTable(table[order(table[,2],decreasing=T),])))
   })
+  
+  output$downloadPredPlot <- downloadHandler(
+    filename = function() {
+      'plot.png'
+    },
+    content = function(file) {
+      ggsave(file, plot = mapPredPlot(), device = "png")
+    }
+  )
+  
+  output$downloadPrefPlot <- downloadHandler(
+    filename = function() {
+      'plot.png'
+    },
+    content = function(file) {
+      ggsave(file, plot = mapPrefPlot(), device = "png")
+    }
+  )
   
 }

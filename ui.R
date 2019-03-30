@@ -521,7 +521,8 @@ argonTabItems(
                   color = "#5e72e4",
                   type = 7,
                   proxy.height = "400px"
-                )
+                ),
+              downloadButton('downloadPredPlot', "Download PNG")
             ),
             conditionalPanel(
               condition = "input.pred3D",
@@ -594,7 +595,8 @@ argonTabItems(
                   color = "#5e72e4",
                   type = 7,
                   proxy.height = "400px"
-                )
+                ),
+              downloadButton('downloadPrefPlot', "Download PNG")
             ),
             conditionalPanel(
               condition = "input.pref3D",
@@ -717,6 +719,25 @@ argonTabItems(
             ),
             numericInput(
               "claraNum",
+              "Number of Clusters",
+              2,
+              min = 2,
+              max = 10,
+              step = 1
+            )
+          )
+          
+          ### PAM inputs ----
+          ,
+          conditionalPanel(
+            condition = "input.clusterAlgo=='PAM'",
+            selectInput(
+              "pamMetric",
+              "Metric",
+              choices = c("euclidean", "manhattan")
+            ),
+            numericInput(
+              "pamNum",
               "Number of Clusters",
               2,
               min = 2,
