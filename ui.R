@@ -630,7 +630,16 @@ argonTabItems(
           selectInput(
             "clusterAlgo",
             "Clustering Algorithm",
-            choices = c("Hierarchical", "K-Means", "DIANA", "CLARA", "PAM")
+            choices = c(
+              "Hierarchical",
+              "K-Means",
+              "DIANA",
+              "CLARA",
+              "PAM",
+              "FANNY",
+              "SOM",
+              "SOTA"
+            )
           ),
           checkboxInput("repel", "Repel", value = F),
           
@@ -731,14 +740,67 @@ argonTabItems(
           ,
           conditionalPanel(
             condition = "input.clusterAlgo=='PAM'",
-            selectInput(
-              "pamMetric",
-              "Metric",
-              choices = c("euclidean", "manhattan")
-            ),
+            selectInput("pamMetric",
+                        "Metric",
+                        choices = c("euclidean", "manhattan")),
             numericInput(
               "pamNum",
               "Number of Clusters",
+              2,
+              min = 2,
+              max = 10,
+              step = 1
+            )
+          )
+          
+          ### FANNY inputs ----
+          ,
+          conditionalPanel(
+            condition = "input.clusterAlgo=='FANNY'",
+            selectInput(
+              "fannyMetric",
+              "Metric",
+              choices = c("euclidean", "manhattan", "SqEuclidean")
+            ),
+            numericInput(
+              "fannyNum",
+              "Desired Number of Clusters",
+              2,
+              min = 2,
+              max = 10,
+              step = 1
+            )
+          )
+          
+          ### SOM inputs ----
+          ,
+          conditionalPanel(
+            condition = "input.clusterAlgo=='SOM'",
+            numericInput(
+              "somx",
+              "Grid X dimension",
+              2,
+              min = 1,
+              max = 10,
+              step = 1
+            ),
+            numericInput(
+              "somy",
+              "Grid Y dimension",
+              2,
+              min = 1,
+              max = 10,
+              step = 1
+            )
+          )
+          
+          ### SOTA inputs ----
+          ,
+          conditionalPanel(
+            condition = "input.clusterAlgo=='SOTA'",
+            numericInput(
+              "sotaNum",
+              "Maximum Number of Clusters",
               2,
               min = 2,
               max = 10,

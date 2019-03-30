@@ -481,7 +481,19 @@ server <- function(input, output, session) {
     if (input$clusterAlgo == "CLARA") {
       classes = obj.clara()$clustering
     }
-    return(classes)
+    if (input$clusterAlgo == "PAM") {
+      classes = obj.pam()$clustering
+    }
+    if (input$clusterAlgo == "FANNY") {
+      classes = obj.fanny()$clustering
+    }
+    if (input$clusterAlgo == "SOM") {
+      classes = obj.som()$unit.classif
+    }
+    if (input$clusterAlgo == "SOTA") {
+      classes = obj.sota()$clust
+    }
+    return(sort(classes))
   })
   
   ### Hierarchical CLustering ----
@@ -515,8 +527,27 @@ server <- function(input, output, session) {
   ### PAM ----
   obj.pam = reactive({
     pam(t(df.hedo()),
-          metric = input$pamMetric,
-          k = input$pamNum)
+        metric = input$pamMetric,
+        k = input$pamNum)
+  })
+  
+  ### FANNY ----
+  obj.fanny = reactive({
+    fanny(t(df.hedo()),
+          metric = input$fannyMetric,
+          k = input$fannyNum)
+  })
+  
+  ### SOM ----
+  obj.som = reactive({
+    som(t(df.hedo()),
+        grid = somgrid(input$somx, input$somy, "hexagonal"))
+  })
+  
+  ### SOTA ----
+  obj.sota = reactive({
+    sota(t(df.hedo()),
+         maxCycles = input$sotaNum - 1)
   })
   
   
@@ -661,7 +692,8 @@ server <- function(input, output, session) {
       as.data.frame() %>%
       rownames_to_column(var = paste(clicked()[["y"]], "Characteristics"))
     colnames(table)[2] = "Average Judge Score"
-    showModal(modalDialog(renderDataTable(table[order(table[,2],decreasing=T),])))
+    showModal(modalDialog(renderDataTable(table[order(table[, 2], decreasing =
+                                                        T), ])))
   })
   
   output$downloadPredPlot <- downloadHandler(
