@@ -225,13 +225,36 @@ server <- function(input, output, session) {
   
   ## Scree plot ----
   
-  
+  screePlot = reactive(fviz_screeplot(obj.pca(), choice = input$choice))
   output$screePlot <- renderPlot({
-    fviz_screeplot(obj.pca(), choice = input$choice)
+    screePlot()
   }, height = 600, width = 600)
+  
+  output$downloadScreePlot <- downloadHandler(
+    filename = function() {
+      'plot.png'
+    },
+    content = function(file) {
+      ggsave(file, plot = screePlot(), device = "png")
+    }
+  )
   
   
   ## Variable plot ----
+  varPlot = reactive(
+    fviz_pca_var(
+      obj.pca(),
+      col.var = "cos2",
+      axes = c(as.numeric(input$axis_X), as.numeric(Y_axis()))
+    ) +
+      scale_color_gradient2(
+        low = "white",
+        mid = "blue",
+        high = "red",
+        midpoint = as.numeric(input$n_cos2),
+        space = "Lab"
+      ) + theme_light()
+  )
   
   output$secondSelector = renderUI(selectInput(
     "axis_Y",
@@ -246,19 +269,29 @@ server <- function(input, output, session) {
   
   output$varPlot =
     renderPlot({
-      fviz_pca_var(obj.pca(),
-                   col.var = "cos2",
-                   axes = c(as.numeric(input$axis_X), as.numeric(Y_axis()))) +
-        scale_color_gradient2(
-          low = "white",
-          mid = "blue",
-          high = "red",
-          midpoint = as.numeric(input$n_cos2),
-          space = "Lab"
-        ) + theme_light()
+      varPlot()
     }, height = 600, width = 600)
   
+  output$downloadVarPlot <- downloadHandler(
+    filename = function() {
+      'plot.png'
+    },
+    content = function(file) {
+      ggsave(file, plot = varPlot(), device = "png")
+    }
+  )
+  
   ## Bi-Plot ----
+  biPlot = reactive(
+    fviz_pca_biplot(
+      obj.pca(),
+      repel = T,
+      alpha.var = "contrib",
+      col.var = "cos2",
+      col.ind = "#f5365c",
+      axes = c(as.numeric(input$axis_X2), as.numeric(Y_axis2()))
+    ) + theme_light()
+  )
   
   output$secondSelector2 = renderUI(selectInput(
     "axis_Y2",
@@ -272,17 +305,18 @@ server <- function(input, output, session) {
     req(input$axis_Y2)
   })
   
-  
   output$biPlot = renderPlot({
-    fviz_pca_biplot(
-      obj.pca(),
-      repel = T,
-      alpha.var = "contrib",
-      col.var = "cos2",
-      col.ind = "#f5365c",
-      axes = c(as.numeric(input$axis_X2), as.numeric(Y_axis2()))
-    ) + theme_light()
+    biPlot()
   }, height = 600, width = 600)
+  
+  output$downloadBiPlot <- downloadHandler(
+    filename = function() {
+      'plot.png'
+    },
+    content = function(file) {
+      ggsave(file, plot = biPlot(), device = "png")
+    }
+  )
   
   ## Pred Map ----
   
@@ -386,6 +420,14 @@ server <- function(input, output, session) {
     )
   })
   
+  output$downloadPredPlot <- downloadHandler(
+    filename = function() {
+      'plot.png'
+    },
+    content = function(file) {
+      ggsave(file, plot = mapPredPlot(), device = "png")
+    }
+  )
   ## Pref Map ----
   
   prefPredictedScores = reactive({
@@ -440,6 +482,15 @@ server <- function(input, output, session) {
       plot.3D = input$pref3D
     )
   })
+  
+  output$downloadPrefPlot <- downloadHandler(
+    filename = function() {
+      'plot.png'
+    },
+    content = function(file) {
+      ggsave(file, plot = mapPrefPlot(), device = "png")
+    }
+  )
   
   ## Clustering Objects----
   
@@ -612,8 +663,7 @@ server <- function(input, output, session) {
   })
   
   ## Clusters ----
-  
-  clusters = eventReactive(input$run, {
+  clusterPlot = reactive({
     fviz_pca_ind(
       obj.pca.conso(),
       repel = input$repel,
@@ -621,7 +671,9 @@ server <- function(input, output, session) {
       ellipse.type = "convex",
       addEllipses = T
     )
-    
+  })
+  clusters = eventReactive(input$run, {
+    clusterPlot()
   })
   observeEvent(input$clusterAlgo, {
     output$clusters <- renderPlot(NULL, height = 100, width = 100)
@@ -629,12 +681,23 @@ server <- function(input, output, session) {
   observeEvent(input$run, {
     output$clusters <- renderPlot(clusters(), height = 600, width = 600)
   })
+  output$downloadClusterPlot <- downloadHandler(
+    filename = function() {
+      'plot.png'
+    },
+    content = function(file) {
+      ggsave(file, plot = clusterPlot(), device = "png")
+    }
+  )
   
   ## Dendogram ----
+  dendroPlot = reactive({
+    fviz_dend(isolate(obj.hc()), color_labels_by_k = TRUE)
+  })
   dendrogram = eventReactive(input$run, {
     input$run
     if (input$clusterAlgo == "Hierarchical")
-      fviz_dend(isolate(obj.hc()), color_labels_by_k = TRUE)
+      dendroPlot()
   })
   
   observeEvent(input$clusterAlgo, {
@@ -644,6 +707,14 @@ server <- function(input, output, session) {
     output$dendrogram <-
       renderPlot(dendrogram(), height = 600, width = 600)
   })
+  output$downloadDendroPlot <- downloadHandler(
+    filename = function() {
+      'plot.png'
+    },
+    content = function(file) {
+      ggsave(file, plot = dendroPlot(), device = "png")
+    }
+  )
   
   ## Class Preference ----
   classes = eventReactive(input$run, {
@@ -696,22 +767,12 @@ server <- function(input, output, session) {
                                                         T), ])))
   })
   
-  output$downloadPredPlot <- downloadHandler(
-    filename = function() {
-      'plot.png'
-    },
-    content = function(file) {
-      ggsave(file, plot = mapPredPlot(), device = "png")
-    }
-  )
   
-  output$downloadPrefPlot <- downloadHandler(
-    filename = function() {
-      'plot.png'
-    },
-    content = function(file) {
-      ggsave(file, plot = mapPrefPlot(), device = "png")
-    }
-  )
+  
+  observeEvent(input$run, {
+    show("downloadClusterPlot")
+    
+    show("downloadDendroPlot")
+  })
   
 }

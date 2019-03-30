@@ -78,6 +78,7 @@ ui <- argonDashPage(
 )
     ),
 useShinyalert(),
+useShinyjs(),
 argonTabItems(
   ## Datasets ----
   argonTabItem(
@@ -366,7 +367,8 @@ argonTabItems(
                 color = "#5e72e4",
                 type = 7,
                 proxy.height = "600px"
-              )
+              ),
+            downloadButton('downloadScreePlot', "Download PNG")
           )
         )
       ),
@@ -406,7 +408,8 @@ argonTabItems(
                 color = "#5e72e4",
                 type = 7,
                 proxy.height = "600px"
-              )
+              ),
+            downloadButton('downloadVarPlot', "Download PNG")
           )
         )
       ),
@@ -437,7 +440,8 @@ argonTabItems(
                 color = "#5e72e4",
                 type = 7,
                 proxy.height = "600px"
-              )
+              ),
+            downloadButton('downloadBiPlot', "Download PNG")
           )
         )
       )
@@ -496,13 +500,13 @@ argonTabItems(
               checkboxInput("predChangeColors", "Change Label Colors", FALSE),
               conditionalPanel(
                 condition = "input.predChangeColors",
-                colourInput(
+                colourpicker::colourInput(
                   inputId = "predContourColor",
                   label = "Contour Color:",
                   palette = "limited",
                   value = "black"
                 ),
-                colourInput(
+                colourpicker::colourInput(
                   inputId = "predProdColor",
                   label = "Product Color:",
                   palette = "limited",
@@ -570,13 +574,13 @@ argonTabItems(
               checkboxInput("prefChangeColors", "Change Label Colors", FALSE),
               conditionalPanel(
                 condition = "input.prefChangeColors",
-                colourInput(
+                colourpicker::colourInput(
                   inputId = "prefContourColor",
                   label = "Contour Color:",
                   palette = "limited",
                   value = "black"
                 ),
-                colourInput(
+                colourpicker::colourInput(
                   inputId = "prefProdColor",
                   label = "Product Color:",
                   palette = "limited",
@@ -840,7 +844,8 @@ argonTabItems(
                     color = "#5e72e4",
                     type = 7,
                     proxy.height = "400px"
-                  )
+                  ),
+                hidden(downloadButton('downloadClusterPlot', "Download PNG"))
               )
             ),
             ### Dendrogram ----
@@ -853,7 +858,8 @@ argonTabItems(
                     color = "#5e72e4",
                     type = 7,
                     proxy.height = "400px"
-                  )
+                  ),
+                hidden(downloadButton('downloadDendroPlot', "Download PNG"))
               )
             ),
             
