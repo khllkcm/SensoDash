@@ -37,7 +37,7 @@ ui <- argonDashPage(
         tabName = "maps",
         icon = "map-big",
         icon_color = "info",
-        "Maps"
+        "Global Maps"
       ),
       argonSidebarItem(
         tabName = "clust",
