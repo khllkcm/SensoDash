@@ -770,9 +770,12 @@ server <- function(input, output, session) {
   
   
   observeEvent(input$run, {
-    show("downloadClusterPlot")
-    
-    show("downloadDendroPlot")
+    showElement("downloadClusterPlot")
+    showElement("downloadDendroPlot")
   })
   
+  observeEvent(input$clusterAlgo, {
+    hideElement("downloadClusterPlot")
+    hideElement("downloadDendroPlot")
+  })
 }
