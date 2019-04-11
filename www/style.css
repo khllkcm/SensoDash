@@ -65,10 +65,18 @@ ul {
  box-sizing: border-box;
 }
 
-.modal-body{
-  padding-top: 0;
+.modal-header{
+  padding-bottom: 0;
 }
 
 .table{
   margin: auto;
+}
+
+.modal-content{
+  width: max-content;
+}
+
+.btn-default{
+  margin-bottom: 10px;
 }
