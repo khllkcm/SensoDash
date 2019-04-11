@@ -207,6 +207,8 @@ server <- function(input, output, session) {
   
   screePlot = reactive(fviz_screeplot(obj.pca(), choice = input$choice))
   output$screePlot <- renderPlot({
+    req(screePlot())
+    on.exit(showElement("downloadScreePlot"))
     screePlot()
   }, height = 600, width = 600)
   
@@ -249,6 +251,8 @@ server <- function(input, output, session) {
   
   output$varPlot =
     renderPlot({
+      req(varPlot())
+      on.exit(showElement("downloadVarPlot"))
       varPlot()
     }, height = 600, width = 600)
   
@@ -286,6 +290,8 @@ server <- function(input, output, session) {
   })
   
   output$biPlot = renderPlot({
+    req(biPlot())
+    on.exit(showElement("downloadBiPlot"))
     biPlot()
   }, height = 600, width = 600)
   
@@ -388,6 +394,8 @@ server <- function(input, output, session) {
   })
   
   output$mapPlot = renderPlot({
+    req(mapPredPlot())
+    on.exit(showElement("downloadPredPlot"))
     mapPredPlot()
   }, height = 600, width = 600)
   
@@ -449,6 +457,8 @@ server <- function(input, output, session) {
   })
   
   output$mapPrefPlot = renderPlot({
+    req(mapPrefPlot())
+    on.exit(showElement("downloadPrefPlot"))
     mapPrefPlot()
   }, height = 600, width = 600)
   
@@ -741,7 +751,7 @@ server <- function(input, output, session) {
       rownames_to_column(var = paste(clicked()[["y"]], "Characteristics"))
     colnames(table)[2] = "Average Judge Score"
     showModal(modalDialog(easyClose = T, renderDataTable(table[order(table[, 2], decreasing =
-                                                                       T),])))
+                                                                       T), ])))
   })
   
   
@@ -779,7 +789,7 @@ server <- function(input, output, session) {
       ) +
         geom_line() +
         geom_point() +
-        facet_wrap(~ Measure, scales = "free") +
+        facet_wrap( ~ Measure, scales = "free") +
         xlab("Number of Clusters") +
         ylab("Measure") +
         scale_x_continuous(breaks = unique(valMeasures()$`Number of Clusters`)) +
@@ -787,6 +797,7 @@ server <- function(input, output, session) {
     )
   })
   
+  output$valPlot <- renderPlot(NULL, width = 100, height = 100)
   
   observeEvent(input$validClust, {
     req(input$validMethod)
@@ -807,6 +818,7 @@ server <- function(input, output, session) {
         size = "s",
         title = "Optimal Scores",
         renderTable(optimalScores(isolate(clvalid(
+          
         ))),
         rownames = T),
         easyClose = T,
