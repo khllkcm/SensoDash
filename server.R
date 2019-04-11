@@ -214,7 +214,7 @@ server <- function(input, output, session) {
   
   output$downloadScreePlot <- downloadHandler(
     filename = function() {
-      'plot.png'
+      'screeplot.png'
     },
     content = function(file) {
       ggsave(file, plot = screePlot(), device = "png")
@@ -258,7 +258,7 @@ server <- function(input, output, session) {
   
   output$downloadVarPlot <- downloadHandler(
     filename = function() {
-      'plot.png'
+      'variableplot.png'
     },
     content = function(file) {
       ggsave(file, plot = varPlot(), device = "png")
@@ -297,7 +297,7 @@ server <- function(input, output, session) {
   
   output$downloadBiPlot <- downloadHandler(
     filename = function() {
-      'plot.png'
+      'biplot.png'
     },
     content = function(file) {
       ggsave(file, plot = biPlot(), device = "png")
@@ -410,7 +410,7 @@ server <- function(input, output, session) {
   
   output$downloadPredPlot <- downloadHandler(
     filename = function() {
-      'plot.png'
+      'predmap.png'
     },
     content = function(file) {
       ggsave(file, plot = mapPredPlot(), device = "png")
@@ -475,7 +475,7 @@ server <- function(input, output, session) {
   
   output$downloadPrefPlot <- downloadHandler(
     filename = function() {
-      'plot.png'
+      'prefmap.png'
     },
     content = function(file) {
       ggsave(file, plot = mapPrefPlot(), device = "png")
@@ -667,7 +667,7 @@ server <- function(input, output, session) {
   })
   output$downloadClusterPlot <- downloadHandler(
     filename = function() {
-      'plot.png'
+      'clusterplot.png'
     },
     content = function(file) {
       ggsave(file, plot = clusterPlot(), device = "png")
@@ -696,7 +696,7 @@ server <- function(input, output, session) {
   })
   output$downloadDendroPlot <- downloadHandler(
     filename = function() {
-      'plot.png'
+      'dendroplot.png'
     },
     content = function(file) {
       ggsave(file, plot = dendroPlot(), device = "png")
@@ -829,7 +829,7 @@ server <- function(input, output, session) {
   
   output$downloadValPlot <- downloadHandler(
     filename = function() {
-      'plot.png'
+      'validationplot.png'
     },
     content = function(file) {
       ggsave(file, plot = valPlot(), device = "png")
