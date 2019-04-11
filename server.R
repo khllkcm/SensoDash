@@ -4,14 +4,9 @@ server <- function(input, output, session) {
   df.hedoForDisplay = reactive({
     req(input$fileHedo)
     validate(need(
-      file_ext(input$fileHedo$name) %in% c(
-        'text/csv',
-        'text/comma-separated-values',
-        'text/tab-separated-values',
-        'text/plain',
-        'csv',
-        'tsv'
-      ),
+      file_ext(input$fileHedo$name) %in% c('text/csv',
+                                           'text/comma-separated-values',
+                                           'csv'),
       "Wrong file format. Try again!"
     ))
     df <- read.csv(
@@ -34,14 +29,9 @@ server <- function(input, output, session) {
       return(read.csv("hedo.csv", sep = ';', row.names = 1))
     req(input$fileHedo)
     validate(need(
-      file_ext(input$fileHedo$name) %in% c(
-        'text/csv',
-        'text/comma-separated-values',
-        'text/tab-separated-values',
-        'text/plain',
-        'csv',
-        'tsv'
-      ),
+      file_ext(input$fileHedo$name) %in% c('text/csv',
+                                           'text/comma-separated-values',
+                                           'csv'),
       "Wrong file format. Try again!"
     ))
     df <- read.csv(
@@ -92,14 +82,9 @@ server <- function(input, output, session) {
   df.sensoForDisplay = reactive({
     req(input$fileSenso)
     validate(need(
-      file_ext(input$fileSenso$name) %in% c(
-        'text/csv',
-        'text/comma-separated-values',
-        'text/tab-separated-values',
-        'text/plain',
-        'csv',
-        'tsv'
-      ),
+      file_ext(input$fileSenso$name) %in% c('text/csv',
+                                            'text/comma-separated-values',
+                                            'csv'),
       "Wrong file format. Try again!"
     ))
     df <- read.csv(
@@ -123,14 +108,9 @@ server <- function(input, output, session) {
     req(input$sensoJudge)
     req(input$sensoProduct)
     validate(need(
-      file_ext(input$fileSenso$name) %in% c(
-        'text/csv',
-        'text/comma-separated-values',
-        'text/tab-separated-values',
-        'text/plain',
-        'csv',
-        'tsv'
-      ),
+      file_ext(input$fileSenso$name) %in% c('text/csv',
+                                            'text/comma-separated-values',
+                                            'csv'),
       "Wrong file format. Try again!"
     ))
     df = read.csv(
@@ -669,7 +649,11 @@ server <- function(input, output, session) {
     output$clusters <- renderPlot(NULL, height = 100, width = 100)
   })
   observeEvent(input$run, {
-    output$clusters <- renderPlot(clusters(), height = 600, width = 600)
+    output$clusters <-
+      renderPlot({
+        on.exit(showElement("downloadClusterPlot"))
+        clusters()
+      }, height = 600, width = 600)
   })
   output$downloadClusterPlot <- downloadHandler(
     filename = function() {
@@ -695,7 +679,10 @@ server <- function(input, output, session) {
   })
   observeEvent(input$run, {
     output$dendrogram <-
-      renderPlot(dendrogram(), height = 600, width = 600)
+      renderPlot({
+        on.exit(showElement("downloadDendroPlot"))
+        dendrogram()
+      }, height = 600, width = 600)
   })
   output$downloadDendroPlot <- downloadHandler(
     filename = function() {
@@ -753,16 +740,10 @@ server <- function(input, output, session) {
       as.data.frame() %>%
       rownames_to_column(var = paste(clicked()[["y"]], "Characteristics"))
     colnames(table)[2] = "Average Judge Score"
-    showModal(modalDialog(renderDataTable(table[order(table[, 2], decreasing =
-                                                        T),])))
+    showModal(modalDialog(easyClose = T, renderDataTable(table[order(table[, 2], decreasing =
+                                                                       T),])))
   })
   
-  
-  
-  observeEvent(input$run, {
-    showElement("downloadClusterPlot")
-    showElement("downloadDendroPlot")
-  })
   
   observeEvent(input$clusterAlgo, {
     hideElement("downloadClusterPlot")
@@ -771,18 +752,19 @@ server <- function(input, output, session) {
   
   #Validity ----
   clvalid <- reactive({
+    req(input$validMethod)
     suppressWarnings(
       clValid(
         t(df.hedo()),
         clMethods = input$validMethod,
         nClust = seq(input$validNumClust[1], input$validNumClust[2]),
-        validation = input$validVMethod
+        validation = input$validVMethod,
+        maxitems = ncol(df.hedo())
       )
     )
   })
   
   valMeasures <- reactive({
-    req(input$validMethod)
     clvalid() %>% measures() %>% melt(
       varnames = c("Measure", "Number of Clusters", "Method"),
       value.name = "Score"
@@ -805,26 +787,32 @@ server <- function(input, output, session) {
     )
   })
   
-  observeEvent(input$valid, {
+  
+  observeEvent(input$validClust, {
     req(input$validMethod)
+    disable('validClust')
     output$valPlot <- renderPlot({
-      valPlot()
+      on.exit({
+        enable('validClust')
+        showElement('optimal')
+        showElement('downloadValPlot')
+      })
+      isolate(valPlot())
     }, height = 600)
+  })
+  
+  observeEvent(input$optimal, {
     showModal(
       modalDialog(
         size = "s",
         title = "Optimal Scores",
-        renderTable(optimalScores(clvalid())),
+        renderTable(optimalScores(isolate(clvalid(
+        ))),
+        rownames = T),
         easyClose = T,
         footer = NULL
       )
     )
-  })
-  
-  
-  
-  observeEvent(input$validMethod, {
-    showElement('downloadValPlot')
   })
   
   output$downloadValPlot <- downloadHandler(
