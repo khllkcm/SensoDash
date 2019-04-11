@@ -535,9 +535,6 @@ server <- function(input, output, session) {
     if (input$clusterAlgo == "PAM") {
       classes = obj.pam()$clustering
     }
-    if (input$clusterAlgo == "FANNY") {
-      classes = obj.fanny()$clustering
-    }
     if (input$clusterAlgo == "SOM") {
       classes = obj.som()$unit.classif
     }
@@ -580,13 +577,6 @@ server <- function(input, output, session) {
     pam(t(df.hedo()),
         metric = input$pamMetric,
         k = input$pamNum)
-  })
-  
-  ### FANNY ----
-  obj.fanny = reactive({
-    fanny(t(df.hedo()),
-          metric = input$fannyMetric,
-          k = input$fannyNum)
   })
   
   ### SOM ----

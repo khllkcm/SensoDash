@@ -646,7 +646,6 @@ argonTabItems(
               "DIANA",
               "CLARA",
               "PAM",
-              "FANNY",
               "SOM",
               "SOTA"
             )
@@ -763,24 +762,6 @@ argonTabItems(
             )
           )
           
-          ### FANNY inputs ----
-          ,
-          conditionalPanel(
-            condition = "input.clusterAlgo=='FANNY'",
-            selectInput(
-              "fannyMetric",
-              "Metric",
-              choices = c("euclidean", "manhattan", "SqEuclidean")
-            ),
-            numericInput(
-              "fannyNum",
-              "Desired Number of Clusters",
-              2,
-              min = 2,
-              max = 10,
-              step = 1
-            )
-          )
           
           ### SOM inputs ----
           ,
@@ -914,7 +895,6 @@ argonTabItems(
               "DIANA",
               "CLARA",
               "PAM",
-              "FANNY",
               "SOTA"
             ),
             multiple = T
