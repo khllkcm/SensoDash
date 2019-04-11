@@ -64,3 +64,11 @@ ul {
  -moz-box-sizing: border-box;
  box-sizing: border-box;
 }
+
+.modal-body{
+  padding-top: 0;
+}
+
+.table{
+  margin: auto;
+}

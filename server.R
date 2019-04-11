@@ -764,7 +764,7 @@ server <- function(input, output, session) {
       rownames_to_column(var = paste(clicked()[["y"]], "Characteristics"))
     colnames(table)[2] = "Average Judge Score"
     showModal(modalDialog(renderDataTable(table[order(table[, 2], decreasing =
-                                                        T), ])))
+                                                        T),])))
   })
   
   
@@ -778,4 +778,71 @@ server <- function(input, output, session) {
     hideElement("downloadClusterPlot")
     hideElement("downloadDendroPlot")
   })
+  
+  #Validity ----
+  clvalid <- reactive({
+    suppressWarnings(
+      clValid(
+        t(df.hedo()),
+        clMethods = input$validMethod,
+        nClust = seq(input$validNumClust[1], input$validNumClust[2]),
+        validation = input$validVMethod
+      )
+    )
+  })
+  
+  valMeasures <- reactive({
+    req(input$validMethod)
+    clvalid() %>% measures() %>% melt(
+      varnames = c("Measure", "Number of Clusters", "Method"),
+      value.name = "Score"
+    ) %>% drop_na()
+  })
+  
+  valPlot <- reactive({
+    suppressWarnings(
+      ggplot(
+        valMeasures(),
+        aes(x = `Number of Clusters`, y = Score, color = Method)
+      ) +
+        geom_line() +
+        geom_point() +
+        facet_wrap(~ Measure, scales = "free") +
+        xlab("Number of Clusters") +
+        ylab("Measure") +
+        scale_x_continuous(breaks = unique(valMeasures()$`Number of Clusters`)) +
+        theme_minimal()
+    )
+  })
+  
+  observeEvent(input$valid, {
+    req(input$validMethod)
+    output$valPlot <- renderPlot({
+      valPlot()
+    }, height = 600)
+    showModal(
+      modalDialog(
+        size = "s",
+        title = "Optimal Scores",
+        renderTable(optimalScores(clvalid())),
+        easyClose = T,
+        footer = NULL
+      )
+    )
+  })
+  
+  
+  
+  observeEvent(input$validMethod, {
+    showElement('downloadValPlot')
+  })
+  
+  output$downloadValPlot <- downloadHandler(
+    filename = function() {
+      'plot.png'
+    },
+    content = function(file) {
+      ggsave(file, plot = valPlot(), device = "png")
+    }
+  )
 }

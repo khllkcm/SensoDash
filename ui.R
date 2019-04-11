@@ -44,6 +44,12 @@ ui <- argonDashPage(
         icon = "building",
         icon_color = "danger",
         "Clustering"
+      ),
+      argonSidebarItem(
+        tabName = "validity",
+        icon = "check-bold",
+        icon_color = "success",
+        "Cluster Validation"
       )
     )
   ),
@@ -633,7 +639,7 @@ argonTabItems(
           width = 2,
           selectInput(
             "clusterAlgo",
-            "Clustering Algorithm",
+            "Clustering Method",
             choices = c(
               "Hierarchical",
               "K-Means",
@@ -884,6 +890,63 @@ argonTabItems(
       )
     )
     
+  ),
+  
+  # Validity ----
+  argonTabItem(
+    tabName = "validity",
+    argonCard(
+      width = 12,
+      src = NULL,
+      icon = "ui-04",
+      status = "success",
+      shadow = TRUE,
+      border_level = 0,
+      argonRow(
+        argonColumn(
+          width = 2,
+          selectInput(
+            "validMethod",
+            "Clustering Method",
+            choices = c(
+              "Hierarchical",
+              "KMeans",
+              "DIANA",
+              "CLARA",
+              "PAM",
+              "FANNY",
+              "SOTA"
+            ),
+            multiple = T
+          ),
+          sliderInput(
+            "validNumClust",
+            "Number of Clusters",
+            min = 2,
+            max = 10,
+            value = c(2, 4)
+          ),
+          selectInput(
+            "validVMethod",
+            "Validation Method",
+            choices = c("internal", "stability")
+          ),
+          actionButton("valid", "Validate")
+          
+        ),
+        argonColumn(
+          width = 10,
+          center = T,
+          plotOutput("valPlot", height = "100%") %>%
+            withSpinner(
+              color = "#5e72e4",
+              type = 7,
+              proxy.height = "600px"
+            ),
+          hidden(downloadButton('downloadValPlot', "Download PNG"))
+        )
+      )
+    )
   )
 )
 
