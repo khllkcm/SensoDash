@@ -751,7 +751,7 @@ server <- function(input, output, session) {
       rownames_to_column(var = paste(clicked()[["y"]], "Characteristics"))
     colnames(table)[2] = "Average Judge Score"
     showModal(modalDialog(easyClose = T, renderDataTable(table[order(table[, 2], decreasing =
-                                                                       T), ])))
+                                                                       T),])))
   })
   
   
@@ -789,7 +789,7 @@ server <- function(input, output, session) {
       ) +
         geom_line() +
         geom_point() +
-        facet_wrap( ~ Measure, scales = "free") +
+        facet_wrap(~ Measure, scales = "free") +
         xlab("Number of Clusters") +
         ylab("Measure") +
         scale_x_continuous(breaks = unique(valMeasures()$`Number of Clusters`)) +
@@ -835,4 +835,79 @@ server <- function(input, output, session) {
       ggsave(file, plot = valPlot(), device = "png")
     }
   )
+  
+  output$optimalMeasures <- renderUI({
+    req(input$optimalVMethod)
+    if (input$optimalVMethod == "internal")
+      return(selectInput(
+        "optimalMeasure",
+        "Measure",
+        choices = c("Connectivity", "Dunn", "Silhouette")
+      ))
+    else
+      return(selectInput(
+        "optimalMeasure",
+        "Measure",
+        choices = c("APN", "AD", "ADM", "FOM")
+      ))
+  })
+  
+  
+  optimalscores <- reactive({
+    req(input$validMethod)
+    suppressWarnings(
+      clValid(
+        t(df.hedo()),
+        clMethods = input$validMethod,
+        nClust = seq(input$validNumClust[1], input$validNumClust[2]),
+        validation = input$optimalVMethod,
+        maxitems = ncol(df.hedo())
+      )
+    ) %>% optimalScores()
+  })
+  
+  optimalMethod <- reactive({
+    optimalscores()[which(rownames(optimalscores()) == input$optimalMeasure), 2] %>%
+      as.character()
+  })
+  
+  optimalNum <- reactive({
+    optimalscores()[which(rownames(optimalscores()) == input$optimalMeasure), 3] %>%
+      as.character() %>%
+      as.numeric()
+  })
+  
+  
+  optimalClusterPlot <- reactive({
+    req(optimalMethod())
+    fviz_pca_ind(
+      obj.pca.conso(),
+      repel = F,
+      habillage = as.factor(isolate(
+        getOptimalClasses(optimalMethod(), t(df.hedo()), optimalNum())
+      )),
+      ellipse.type = "convex",
+      addEllipses = T
+    )+ggtitle(optimalMethod())
+  })
+  
+  optimalclusterPlot <- eventReactive(input$optimalValidate,
+                                      optimalClusterPlot())
+  
+  observeEvent(input$optimalValidate, {
+    output$optimalClusterPlot <-
+      renderPlot({
+        on.exit(showElement("downloadOptimalClusterPlot"))
+        optimalclusterPlot()
+      }, height = 600, width = 600)
+  })
+  output$downloadOptimalClusterPlot <- downloadHandler(
+    filename = function() {
+      'optimalclusterplot.png'
+    },
+    content = function(file) {
+      ggsave(file, plot = optimalClusterPlot(), device = "png")
+    }
+  )
+  
 }

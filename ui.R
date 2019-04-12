@@ -592,7 +592,7 @@ ui <- argonDashPage(
                 )
               ),
               argonColumn(
-            width = 9,
+                width = 9,
                 center = T,
                 conditionalPanel(
                   condition = "!input.pref3D",
@@ -951,34 +951,27 @@ ui <- argonDashPage(
                   "Validation Method",
                   choices = c("internal", "stability")
                 ),
-                conditionalPanel(
-                  "input.optimalVMethod=='internal'",
-                  selectInput(
-                    "optimalIMeasure",
-                    "Measure",
-                    choices = c("Conenctivity", "Dunn", "Silhouette")
-                  )
-                ),
                 
-                conditionalPanel(
-                  "input.optimalVMethod=='stability'",
-                  selectInput(
-                    "optimalSMeasure",
-                    "Measure",
-                    choices = c("APN", "AD", "ADM", "FOM")
-                  )
-                ),
+                uiOutput("optimalMeasures"),
                 
                 argonRow(argonColumn(
                   center = T,
-                  actionButton("optimalClust", "Validate")
+                  actionButton("optimalValidate", "Validate")
                 ))
                 
               ),
               argonColumn(
                 width = 10,
-                center = T
-                
+                center = T,
+                plotOutput("optimalClusterPlot", height = "100%") %>%
+                  withSpinner(
+                    color = "#5e72e4",
+                    type = 7,
+                    proxy.height = "400px"
+                  ),
+                hidden(downloadButton(
+                  'downloadOptimalClusterPlot', "Download PNG"
+                ))
               )
             )
           ),
@@ -1048,7 +1041,9 @@ ui <- argonDashPage(
                       type = 7,
                       proxy.height = "400px"
                     ),
-                  hidden(downloadButton('downloadOptimalPredPlot', "Download PNG"))
+                  hidden(downloadButton(
+                    'downloadOptimalPredPlot', "Download PNG"
+                  ))
                 ),
                 conditionalPanel(
                   condition = "input.optimalPred3D",
@@ -1122,7 +1117,9 @@ ui <- argonDashPage(
                       type = 7,
                       proxy.height = "400px"
                     ),
-                  hidden(downloadButton('downloadOptimalPrefPlot', "Download PNG"))
+                  hidden(downloadButton(
+                    'downloadOptimalPrefPlot', "Download PNG"
+                  ))
                 ),
                 conditionalPanel(
                   condition = "input.optimalPref3D",
