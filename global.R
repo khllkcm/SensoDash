@@ -218,3 +218,34 @@ plotMap = function(predictedScore,
   
   return(plot)
 }
+
+getOptimalClasses <- function(method, t.df.hedo, k) {
+  switch (
+    method,
+    "hierarchical" = {
+      distance = dist(t.df.hedo)
+      hc = hclust(distance)
+      return(hc %>% cutree(k = k))
+    },
+    "kmeans" = {
+      return(kmeans(t.df.hedo,
+                    centers = k,)$cluster)
+    },
+    "diana" = {
+      return(diana(t.df.hedo,
+                   diss = F,) %>% cutree(k = k))
+    },
+    "clara" = {
+      return(clara(t.df.hedo,
+                   k = k)$clustering)
+    },
+    "pam" = {
+      return(pam(t.df.hedo,
+                 k = k)$clustering)
+    },
+    "sota" = {
+      return(sota(t.df.hedo,
+                  maxCycles = k - 1)$clust)
+    }
+  )
+}
