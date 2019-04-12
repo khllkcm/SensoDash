@@ -679,7 +679,7 @@ ui <- argonDashPage(
                 ),
                 numericInput(
                   "hclusterNum",
-                  "Number of Clusters",
+                  "Number of Clusters to Display",
                   5,
                   min = 2,
                   max = 10,
@@ -714,7 +714,7 @@ ui <- argonDashPage(
                             choices = c("euclidean", "manhattan")),
                 numericInput(
                   "dianaNum",
-                  "Number of Clusters",
+                  "Number of Clusters to Display",
                   2,
                   min = 2,
                   max = 10,
@@ -978,13 +978,14 @@ ui <- argonDashPage(
           ## Optimal Prediction map ----
           
           argonTab(
-            tabName = "Score Optimal Prediction Map",
+            tabName = "Class Prediction Map",
             active = F,
             argonRow(
               argonColumn(
                 width = 2,
+                uiOutput("selectClass"),
                 selectInput(
-                  "modelFormula",
+                  "optimalModelFormula",
                   label = "Formula",
                   choices = c("Vector", "Circular", "Elliptic", "Quadratic"),
                   selected = "Quadratic"
@@ -1060,7 +1061,7 @@ ui <- argonDashPage(
           ),
           ## Optimal Preference map ----
           argonTab(
-            tabName = "Optimal Preference Map",
+            tabName = "Class Preference Map",
             active = FALSE,
             argonRow(
               argonColumn(
@@ -1111,7 +1112,7 @@ ui <- argonDashPage(
                 center = T,
                 conditionalPanel(
                   condition = "!input.optimalPref3D",
-                  plotOutput("mapoptimalPrefPlot", height = "100%") %>%
+                  plotOutput("mapOptimalPrefPlot", height = "100%") %>%
                     withSpinner(
                       color = "#5e72e4",
                       type = 7,
@@ -1123,7 +1124,7 @@ ui <- argonDashPage(
                 ),
                 conditionalPanel(
                   condition = "input.optimalPref3D",
-                  plotlyOutput("mapoptimalPrefPlotly", height = "627px") %>%
+                  plotlyOutput("mapOptimalPrefPlotly", height = "627px") %>%
                     withSpinner(
                       color = "#5e72e4",
                       type = 7,

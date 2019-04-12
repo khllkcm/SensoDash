@@ -751,7 +751,7 @@ server <- function(input, output, session) {
       rownames_to_column(var = paste(clicked()[["y"]], "Characteristics"))
     colnames(table)[2] = "Average Judge Score"
     showModal(modalDialog(easyClose = T, renderDataTable(table[order(table[, 2], decreasing =
-                                                                       T),])))
+                                                                       T), ])))
   })
   
   
@@ -789,7 +789,7 @@ server <- function(input, output, session) {
       ) +
         geom_line() +
         geom_point() +
-        facet_wrap(~ Measure, scales = "free") +
+        facet_wrap( ~ Measure, scales = "free") +
         xlab("Number of Clusters") +
         ylab("Measure") +
         scale_x_continuous(breaks = unique(valMeasures()$`Number of Clusters`)) +
@@ -811,6 +811,8 @@ server <- function(input, output, session) {
       isolate(valPlot())
     }, height = 600)
   })
+  
+  #Optimal ----
   
   observeEvent(input$optimal, {
     showModal(
@@ -877,18 +879,20 @@ server <- function(input, output, session) {
       as.numeric()
   })
   
+  optimalClasses <- reactive({
+    req(optimalMethod())
+    getOptimalClasses(optimalMethod(), t(df.hedo()), optimalNum())
+  })
   
   optimalClusterPlot <- reactive({
     req(optimalMethod())
     fviz_pca_ind(
       obj.pca.conso(),
       repel = F,
-      habillage = as.factor(isolate(
-        getOptimalClasses(optimalMethod(), t(df.hedo()), optimalNum())
-      )),
+      habillage = as.factor(isolate(optimalClasses())),
       ellipse.type = "convex",
       addEllipses = T
-    )+ggtitle(optimalMethod())
+    ) + ggtitle(optimalMethod())
   })
   
   optimalclusterPlot <- eventReactive(input$optimalValidate,
@@ -907,6 +911,197 @@ server <- function(input, output, session) {
     },
     content = function(file) {
       ggsave(file, plot = optimalClusterPlot(), device = "png")
+    }
+  )
+  
+  
+  output$selectClass <-
+    renderUI({
+      selectInput("optimalClass",
+                  "Class",
+                  choices = unique(optimalClasses() %>% sort()))
+    })
+  
+  
+  #Pred per class ----
+  optiFittedModels <- reactive({
+    req(mapBisc())
+    req(optimalClasses())
+    req(input$optimalClass)
+    fitModel(mapBisc()[, c(which(optimalClasses() == input$optimalClass),
+                           ncol(mapBisc()) - 1,
+                           ncol(mapBisc()))], formula = input$optimalModelFormula)
+  })
+  
+  optimalPredDiscreteSpace = reactive({
+    req(mapBisc())
+    makeGrid(mapBisc()[, c(which(optimalClasses() == input$optimalClass),
+                           ncol(mapBisc()) - 1,
+                           ncol(mapBisc()))], input$optimalPredNbPoints)
+  })
+  
+  optimalPredictedScores = reactive({
+    scores = sapply(optiFittedModels(), predict, newdata = optimalPredDiscreteSpace()) %>%
+      as.data.frame()
+    return(scores)
+  })
+  
+  qualityMessagePred = reactive({
+    predictionQuality(optimalPredictedScores())
+  })
+  
+  
+  observeEvent(input$currentTab, {
+    if (input$currentTab == "optimal")
+      shinyalert(
+        title = "Warning",
+        text = qualityMessagePred(),
+        closeOnEsc = TRUE,
+        closeOnClickOutside = TRUE,
+        html = FALSE,
+        type = "warning",
+        showConfirmButton = TRUE,
+        showCancelButton = FALSE,
+        timer = 0,
+        imageUrl = "",
+        animation = TRUE
+      )
+  })
+  
+  observeEvent(optimalPredictedScores(), {
+    if (input$currentTab == "optimal")
+      shinyalert(
+        title = "Warning",
+        text = qualityMessagePred(),
+        closeOnEsc = TRUE,
+        closeOnClickOutside = TRUE,
+        html = FALSE,
+        type = "warning",
+        showConfirmButton = TRUE,
+        showCancelButton = FALSE,
+        timer = 0,
+        imageUrl = "",
+        animation = TRUE
+      )
+  })
+  
+  
+  mapoptimalPredPlot = reactive({
+    req(input$optimalPredContourStep)
+    req(input$optimalPredNbPoints)
+    plotMap(
+      optimalPredictedScores() %>% rowMeans(na.rm = T),
+      mapBisc()[, c(which(optimalClasses() == input$optimalClass),
+                    ncol(mapBisc()) - 1,
+                    ncol(mapBisc()))],
+      optimalPredDiscreteSpace(),
+      plot.contour = input$optimalPredContour,
+      plot.3D = input$optimalPred3D,
+      show.prods = input$optimalPredShowProds,
+      prod.points = input$optimalPredShowProdDots,
+      interpolate = input$optimalPredInterpolate,
+      contour.step = input$optimalPredContourStep,
+      nbpoints = input$optimalPredNbPoints,
+      contour.col = input$optimalPredContourColor,
+      prod.col = input$optimalPredProdColor
+    )
+  })
+  
+  output$mapOptimalPlot = renderPlot({
+    req(mapoptimalPredPlot())
+    on.exit(showElement("downloadOptimalPredPlot"))
+    mapoptimalPredPlot()
+  }, height = 600, width = 600)
+  
+  output$mapOptimalPlotly = renderPlotly({
+    plotMap(
+      optimalPredictedScores() %>% rowMeans(na.rm = T),
+      mapBisc()[, c(which(optimalClasses() == input$optimalClass),
+                    ncol(mapBisc()) - 1,
+                    ncol(mapBisc()))],
+      optimalPredDiscreteSpace(),
+      plot.3D = input$optimalPred3D
+    )
+  })
+  
+  output$downloadOptimalPredPlot <- downloadHandler(
+    filename = function() {
+      'optimalPredmap.png'
+    },
+    content = function(file) {
+      ggsave(file, plot = mapoptimalPredPlot(), device = "png")
+    }
+  )
+  
+  # Pref per class ----
+  optimalPrefPredictedScores = reactive({
+    scores = sapply(optiFittedModels(), predict, newdata = optimalPrefDiscreteSpace()) %>%
+      as.data.frame()
+    return(scores)
+  })
+  
+  optimalPrefDiscreteSpace = reactive({
+    req(mapBisc())
+    makeGrid(mapBisc()[, c(which(optimalClasses() == input$optimalClass),
+                           ncol(mapBisc()) - 1,
+                           ncol(mapBisc()))], input$optimalPrefNbPoints)
+  })
+  
+  
+  optimalPreferences = reactive({
+    mapply(function(x, y) {
+      as.numeric(x > mean(y))
+    }, optimalPrefPredictedScores(), df.hedo()[, which(optimalClasses() ==
+                                                         input$optimalClass)]) %>% as.data.frame()
+  })
+  
+  mapOptimalPrefPlot = reactive({
+    req(input$optimalPrefContourStep)
+    req(input$optimalPrefNbPoints)
+    plotMap(
+      100 * optimalPreferences() %>% rowMeans(na.rm = T),
+      mapBisc()[, c(which(optimalClasses() == input$optimalClass),
+                    ncol(mapBisc()) - 1,
+                    ncol(mapBisc()))],
+      optimalPrefDiscreteSpace(),
+      plot.type = "preference",
+      plot.contour = input$optimalPrefContour,
+      plot.3D = input$optimalPref3D,
+      show.prods = input$optimalPrefShowProds,
+      prod.points = input$optimalPrefShowProdDots,
+      interpolate = input$optimalPrefInterpolate,
+      contour.step = input$optimalPrefContourStep,
+      nbpoints = input$optimalPrefNbPoints,
+      contour.col = input$optimalPrefContourColor,
+      prod.col = input$optimalPrefProdColor
+    )
+  })
+  
+  output$mapOptimalPrefPlot = renderPlot({
+    req(mapOptimalPrefPlot())
+    on.exit(showElement("downloadOptimalPrefPlot"))
+    mapOptimalPrefPlot()
+  }, height = 600, width = 600)
+  
+  
+  output$mapOptimalPrefPlotly = renderPlotly({
+    plotMap(
+      100 * optimalPreferences() %>% rowMeans(na.rm = T),
+      mapBisc()[, c(which(optimalClasses() == input$optimalClass),
+                    ncol(mapBisc()) - 1,
+                    ncol(mapBisc()))],
+      optimalPrefDiscreteSpace(),
+      plot.type = "preference",
+      plot.3D = input$optimalPref3D
+    )
+  })
+  
+  output$downloadOptimalPrefPlot <- downloadHandler(
+    filename = function() {
+      'optimalPrefmap.png'
+    },
+    content = function(file) {
+      ggsave(file, plot = mapOptimalPrefPlot(), device = "png")
     }
   )
   
