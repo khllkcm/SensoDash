@@ -22,6 +22,7 @@ library(plotly)
 library(cluster)
 library(kohonen)
 library(clValid)
+library(tidyr)
 
 getPCA = function(df.senso, product, judge, session) {
   df.X = summaryBy(
