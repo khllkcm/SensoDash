@@ -520,6 +520,7 @@ ui <- argonDashPage(
               argonColumn(
                 width = 10,
                 center = T,
+                uiOutput("predWarning"),
                 conditionalPanel(
                   condition = "!input.pred3D",
                   plotOutput("mapPlot", height = "100%") %>%
@@ -1034,6 +1035,7 @@ ui <- argonDashPage(
               argonColumn(
                 width = 10,
                 center = T,
+                uiOutput("optimalPredWarning"),
                 conditionalPanel(
                   condition = "!input.optimalPred3D",
                   plotOutput("mapOptimalPlot", height = "100%") %>%

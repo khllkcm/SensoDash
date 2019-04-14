@@ -338,40 +338,12 @@ server <- function(input, output, session) {
     predictionQuality(predictedScores())
   })
   
-  
-  observeEvent(input$currentTab, {
-    if (input$currentTab == "maps")
-      shinyalert(
-        title = "Warning",
-        text = qualityMessagePred(),
-        closeOnEsc = TRUE,
-        closeOnClickOutside = TRUE,
-        html = FALSE,
-        type = "warning",
-        showConfirmButton = TRUE,
-        showCancelButton = FALSE,
-        timer = 0,
-        imageUrl = "",
-        animation = TRUE
-      )
-  })
-  
-  observeEvent(predictedScores(), {
-    if (input$currentTab == "maps")
-      shinyalert(
-        title = "Warning",
-        text = qualityMessagePred(),
-        closeOnEsc = TRUE,
-        closeOnClickOutside = TRUE,
-        html = FALSE,
-        type = "warning",
-        showConfirmButton = TRUE,
-        showCancelButton = FALSE,
-        timer = 0,
-        imageUrl = "",
-        animation = TRUE
-      )
-  })
+  output$predWarning <-
+    renderUI(argonAlert(
+      qualityMessagePred(),
+      closable = T,
+      status = "info"
+    ))
   
   
   mapPredPlot = reactive({
@@ -915,6 +887,7 @@ server <- function(input, output, session) {
   )
   
   
+  #Pred per class ----
   output$selectClass <-
     renderUI({
       selectInput("optimalClass",
@@ -922,8 +895,6 @@ server <- function(input, output, session) {
                   choices = unique(optimalClasses() %>% sort()))
     })
   
-  
-  #Pred per class ----
   optiFittedModels <- reactive({
     req(mapBisc())
     req(optimalClasses())
@@ -946,45 +917,16 @@ server <- function(input, output, session) {
     return(scores)
   })
   
-  qualityMessagePred = reactive({
+  qualityMessageOptiPred = reactive({
     predictionQuality(optimalPredictedScores())
   })
   
-  
-  observeEvent(input$currentTab, {
-    if (input$currentTab == "optimal")
-      shinyalert(
-        title = "Warning",
-        text = qualityMessagePred(),
-        closeOnEsc = TRUE,
-        closeOnClickOutside = TRUE,
-        html = FALSE,
-        type = "warning",
-        showConfirmButton = TRUE,
-        showCancelButton = FALSE,
-        timer = 0,
-        imageUrl = "",
-        animation = TRUE
-      )
-  })
-  
-  observeEvent(optimalPredictedScores(), {
-    if (input$currentTab == "optimal")
-      shinyalert(
-        title = "Warning",
-        text = qualityMessagePred(),
-        closeOnEsc = TRUE,
-        closeOnClickOutside = TRUE,
-        html = FALSE,
-        type = "warning",
-        showConfirmButton = TRUE,
-        showCancelButton = FALSE,
-        timer = 0,
-        imageUrl = "",
-        animation = TRUE
-      )
-  })
-  
+  output$optimalPredWarning <-
+    renderUI(argonAlert(
+      qualityMessageOptiPred(),
+      closable = T,
+      status = "info"
+    ))
   
   mapoptimalPredPlot = reactive({
     req(input$optimalPredContourStep)
