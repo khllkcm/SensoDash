@@ -1068,6 +1068,7 @@ ui <- argonDashPage(
             argonRow(
               argonColumn(
                 width = 2,
+                uiOutput("selectPrefClass"),
                 checkboxInput("optimalPref3D", "3D Plot", FALSE),
                 conditionalPanel(
                   condition = "!input.optimalPref3D",

@@ -723,7 +723,7 @@ server <- function(input, output, session) {
       rownames_to_column(var = paste(clicked()[["y"]], "Characteristics"))
     colnames(table)[2] = "Average Judge Score"
     showModal(modalDialog(easyClose = T, renderDataTable(table[order(table[, 2], decreasing =
-                                                                       T), ])))
+                                                                       T),])))
   })
   
   
@@ -761,7 +761,7 @@ server <- function(input, output, session) {
       ) +
         geom_line() +
         geom_point() +
-        facet_wrap( ~ Measure, scales = "free") +
+        facet_wrap(~ Measure, scales = "free") +
         xlab("Number of Clusters") +
         ylab("Measure") +
         scale_x_continuous(breaks = unique(valMeasures()$`Number of Clusters`)) +
@@ -976,17 +976,37 @@ server <- function(input, output, session) {
   )
   
   # Pref per class ----
+  output$selectPrefClass <-
+    renderUI({
+      selectInput("optimalPrefClass",
+                  "Class",
+                  choices = unique(optimalClasses() %>% sort()))
+    })
+  
+  optiPrefFittedModels <- reactive({
+    req(mapBisc())
+    req(optimalClasses())
+    req(input$optimalPrefClass)
+    fitModel(mapBisc()[, c(
+      which(optimalClasses() == input$optimalPrefClass),
+      ncol(mapBisc()) - 1,
+      ncol(mapBisc())
+    )], formula = input$optimalModelFormula)
+  })
+  
   optimalPrefPredictedScores = reactive({
-    scores = sapply(optiFittedModels(), predict, newdata = optimalPrefDiscreteSpace()) %>%
+    scores = sapply(optiPrefFittedModels(), predict, newdata = optimalPrefDiscreteSpace()) %>%
       as.data.frame()
     return(scores)
   })
   
   optimalPrefDiscreteSpace = reactive({
     req(mapBisc())
-    makeGrid(mapBisc()[, c(which(optimalClasses() == input$optimalClass),
-                           ncol(mapBisc()) - 1,
-                           ncol(mapBisc()))], input$optimalPrefNbPoints)
+    makeGrid(mapBisc()[, c(
+      which(optimalClasses() == input$optimalPrefClass),
+      ncol(mapBisc()) - 1,
+      ncol(mapBisc())
+    )], input$optimalPrefNbPoints)
   })
   
   
@@ -994,7 +1014,7 @@ server <- function(input, output, session) {
     mapply(function(x, y) {
       as.numeric(x > mean(y))
     }, optimalPrefPredictedScores(), df.hedo()[, which(optimalClasses() ==
-                                                         input$optimalClass)]) %>% as.data.frame()
+                                                         input$optimalPrefClass)]) %>% as.data.frame()
   })
   
   mapOptimalPrefPlot = reactive({
@@ -1002,9 +1022,11 @@ server <- function(input, output, session) {
     req(input$optimalPrefNbPoints)
     plotMap(
       100 * optimalPreferences() %>% rowMeans(na.rm = T),
-      mapBisc()[, c(which(optimalClasses() == input$optimalClass),
-                    ncol(mapBisc()) - 1,
-                    ncol(mapBisc()))],
+      mapBisc()[, c(
+        which(optimalClasses() == input$optimalPrefClass),
+        ncol(mapBisc()) - 1,
+        ncol(mapBisc())
+      )],
       optimalPrefDiscreteSpace(),
       plot.type = "preference",
       plot.contour = input$optimalPrefContour,
@@ -1029,9 +1051,11 @@ server <- function(input, output, session) {
   output$mapOptimalPrefPlotly = renderPlotly({
     plotMap(
       100 * optimalPreferences() %>% rowMeans(na.rm = T),
-      mapBisc()[, c(which(optimalClasses() == input$optimalClass),
-                    ncol(mapBisc()) - 1,
-                    ncol(mapBisc()))],
+      mapBisc()[, c(
+        which(optimalClasses() == input$optimalPrefClass),
+        ncol(mapBisc()) - 1,
+        ncol(mapBisc())
+      )],
       optimalPrefDiscreteSpace(),
       plot.type = "preference",
       plot.3D = input$optimalPref3D
@@ -1046,5 +1070,7 @@ server <- function(input, output, session) {
       ggsave(file, plot = mapOptimalPrefPlot(), device = "png")
     }
   )
+  
+  
   
 }
