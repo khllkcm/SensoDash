@@ -778,6 +778,7 @@ server <- function(input, output, session) {
       on.exit({
         enable('validClust')
         showElement('optimal')
+        showElement('optiNext')
         showElement('downloadValPlot')
       })
       isolate(valPlot())
@@ -811,8 +812,8 @@ server <- function(input, output, session) {
   )
   
   output$optimalMeasures <- renderUI({
-    req(input$optimalVMethod)
-    if (input$optimalVMethod == "internal")
+    req(input$validVMethod)
+    if (input$validVMethod == "internal")
       return(selectInput(
         "optimalMeasure",
         "Measure",
@@ -834,7 +835,7 @@ server <- function(input, output, session) {
         t(df.hedo()),
         clMethods = input$validMethod,
         nClust = seq(input$validNumClust[1], input$validNumClust[2]),
-        validation = input$optimalVMethod,
+        validation = input$validVMethod,
         maxitems = ncol(df.hedo())
       )
     ) %>% optimalScores()
@@ -867,16 +868,12 @@ server <- function(input, output, session) {
     ) + ggtitle(optimalMethod())
   })
   
-  optimalclusterPlot <- eventReactive(input$optimalValidate,
-                                      optimalClusterPlot())
+  output$optimalClusterPlot <- renderPlot({
+    on.exit(showElement("downloadOptimalClusterPlot"))
+    optimalClusterPlot()
+  }, height = 600, width = 600)
   
-  observeEvent(input$optimalValidate, {
-    output$optimalClusterPlot <-
-      renderPlot({
-        on.exit(showElement("downloadOptimalClusterPlot"))
-        optimalclusterPlot()
-      }, height = 600, width = 600)
-  })
+  
   output$downloadOptimalClusterPlot <- downloadHandler(
     filename = function() {
       'optimalclusterplot.png'
@@ -1071,6 +1068,20 @@ server <- function(input, output, session) {
     }
   )
   
+  
+  output$tab <- renderText({
+    " "
+  })
+  observeEvent(input$optiNext, {
+    output$tab <- renderText({
+      "  "
+    })
+  })
+  observeEvent(input$optiPrev, {
+    output$tab <- renderText({
+      " "
+    })
+  })
   
   
 }

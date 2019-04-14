@@ -50,12 +50,6 @@ ui <- argonDashPage(
         icon = "check-bold",
         icon_color = "success",
         "Cluster Validation"
-      ),
-      argonSidebarItem(
-        tabName = "optimal",
-        icon = "compass-04",
-        icon_color = "yellow",
-        "Explore Optimal Clusters"
       )
     )
   ),
@@ -89,7 +83,6 @@ ui <- argonDashPage(
         });"
       )
     ),
-    useShinyalert(),
     useShinyjs(),
     argonTabItems(
       ## Datasets ----
@@ -873,278 +866,284 @@ ui <- argonDashPage(
       # Validity ----
       argonTabItem(
         tabName = "validity",
-        argonCard(
-          width = 12,
-          src = NULL,
-          icon = "ui-04",
-          status = "success",
-          shadow = TRUE,
-          border_level = 0,
-          argonRow(
-            argonColumn(
-              width = 2,
-              selectInput(
-                "validMethod",
-                "Clustering Method",
-                choices = c("Hierarchical",
-                            "KMeans",
-                            "DIANA",
-                            "CLARA",
-                            "PAM",
-                            "SOTA"),
-                multiple = T
-              ),
-              sliderInput(
-                "validNumClust",
-                "Number of Clusters",
-                min = 2,
-                max = 10,
-                value = c(2, 4)
-              ),
-              selectInput(
-                "validVMethod",
-                "Validation Method",
-                choices = c("internal", "stability")
-              ),
-              argonRow(argonColumn(
-                center = T,
-                actionButton("validClust", "Validate"),
-                hidden(actionButton("optimal", "Show Optimal Scores"))
-              ))
-            ),
-            argonColumn(
-              width = 10,
-              center = T,
-              plotOutput("valPlot", height = "100%") %>%
-                withSpinner(
-                  color = "#5e72e4",
-                  type = 7,
-                  proxy.height = "600px"
-                ),
-              hidden(downloadButton('downloadValPlot', "Download PNG"))
-            )
-          )
-        )
-      ),
-      
-      ## Optimal ----
-      ## Maps ----
-      argonTabItem(
-        tabName = "optimal",
-        argonTabSet(
-          id = "tab-6",
-          card_wrapper = TRUE,
-          horizontal = TRUE,
-          circle = FALSE,
-          size = "sm",
-          width = 12,
-          iconList = NULL,
-          ## Optimal CLusters ----
-          
-          argonTab(
-            tabName = "Optimal Cluster Map",
-            active = TRUE,
+        conditionalPanel(
+          "output.tab==' '",
+          argonCard(
+            width = 12,
+            src = NULL,
+            icon = "ui-04",
+            status = "success",
+            shadow = TRUE,
+            border_level = 0,
             argonRow(
               argonColumn(
                 width = 2,
                 selectInput(
-                  "optimalVMethod",
+                  "validMethod",
+                  "Clustering Method",
+                  choices = c("Hierarchical",
+                              "KMeans",
+                              "DIANA",
+                              "CLARA",
+                              "PAM",
+                              "SOTA"),
+                  multiple = T
+                ),
+                sliderInput(
+                  "validNumClust",
+                  "Number of Clusters",
+                  min = 2,
+                  max = 10,
+                  value = c(2, 4)
+                ),
+                selectInput(
+                  "validVMethod",
                   "Validation Method",
                   choices = c("internal", "stability")
                 ),
-                
-                uiOutput("optimalMeasures"),
-                
-                argonRow(argonColumn(
-                  center = T,
-                  actionButton("optimalValidate", "Validate")
-                ))
-                
+                argonRow(
+                  argonColumn(
+                    center = T,
+                    actionButton("validClust", "Validate"),
+                    argonRow(),
+                    argonRow(),
+                    hr()
+                  ),
+                  argonRow(argonColumn(
+                    center = T,
+                    hidden(actionButton("optimal", "Show Optimal Scores")),
+                    hidden(actionButton("optiNext", "Fit Optimal Method"))
+                  ))
+                )
               ),
               argonColumn(
                 width = 10,
                 center = T,
-                plotOutput("optimalClusterPlot", height = "100%") %>%
+                plotOutput("valPlot", height = "100%") %>%
                   withSpinner(
                     color = "#5e72e4",
                     type = 7,
-                    proxy.height = "400px"
+                    proxy.height = "600px"
                   ),
-                hidden(downloadButton(
-                  'downloadOptimalClusterPlot', "Download PNG"
-                ))
+                hidden(downloadButton('downloadValPlot', "Download PNG"))
               )
             )
-          ),
-          ## Optimal Prediction map ----
-          
-          argonTab(
-            tabName = "Class Prediction Map",
-            active = F,
-            argonRow(
-              argonColumn(
-                width = 2,
-                uiOutput("selectClass"),
-                selectInput(
-                  "optimalModelFormula",
-                  label = "Formula",
-                  choices = c("Vector", "Circular", "Elliptic", "Quadratic"),
-                  selected = "Quadratic"
+          )
+        ),
+        conditionalPanel(
+          "output.tab=='  '",
+          argonTabSet(
+            id = "tab-6",
+            card_wrapper = TRUE,
+            horizontal = TRUE,
+            circle = FALSE,
+            size = "sm",
+            width = 12,
+            iconList = NULL,
+            ## Optimal CLusters ----
+            
+            argonTab(
+              tabName = "Optimal Cluster Map",
+              active = TRUE,
+              argonRow(
+                argonColumn(
+                  width = 2,
+                  uiOutput("optimalMeasures"),
+                  argonRow(),
+                  argonRow(),
+                  hr(),
+                  argonRow(argonColumn(
+                    center = T,
+                    actionButton("optiPrev", "Previous")
+                  ))
                 ),
-                checkboxInput("optimalPred3D", "3D Plot", FALSE),
-                conditionalPanel(
-                  condition = "!input.optimalPred3D",
-                  checkboxInput("optimalPredInterpolate", "Interpolate", TRUE),
-                  conditionalPanel(
-                    condition = "!input.optimalPredInterpolate",
-                    numericInput(
-                      "optimalPredNbPoints",
-                      "Number of points",
-                      50,
-                      min = 10,
-                      max = 150,
-                      step = 10
-                    )
-                  ),
-                  checkboxInput("optimalPredContour", "Plot Contour", FALSE),
-                  conditionalPanel(
-                    condition = "input.optimalPredContour",
-                    numericInput("optimalPredContourStep", "Contour Step", 1.5, min =
-                                   0.25)
-                  ),
-                  checkboxInput("optimalPredShowProds", "Show Product Names", FALSE),
-                  checkboxInput("optimalPredShowProdDots", "Show Product Points", FALSE),
-                  checkboxInput("optimalPredChangeColors", "Change Label Colors", FALSE),
-                  conditionalPanel(
-                    condition = "input.optimalPredChangeColors",
-                    colourpicker::colourInput(
-                      inputId = "optimalPredContourColor",
-                      label = "Contour Color:",
-                      palette = "limited",
-                      value = "black"
-                    ),
-                    colourpicker::colourInput(
-                      inputId = "optimalPredProdColor",
-                      label = "Product Color:",
-                      palette = "limited",
-                      value = "white"
-                    )
-                  )
-                )
-              ),
-              argonColumn(
-                width = 10,
-                center = T,
-                uiOutput("optimalPredWarning"),
-                conditionalPanel(
-                  condition = "!input.optimalPred3D",
-                  plotOutput("mapOptimalPlot", height = "100%") %>%
+                argonColumn(
+                  width = 10,
+                  center = T,
+                  plotOutput("optimalClusterPlot", height = "100%") %>%
                     withSpinner(
                       color = "#5e72e4",
                       type = 7,
                       proxy.height = "400px"
                     ),
                   hidden(downloadButton(
-                    'downloadOptimalPredPlot', "Download PNG"
+                    'downloadOptimalClusterPlot', "Download PNG"
                   ))
-                ),
-                conditionalPanel(
-                  condition = "input.optimalPred3D",
-                  plotlyOutput("mapOptimalPlotly", height = "627px") %>%
-                    withSpinner(
-                      color = "#5e72e4",
-                      type = 7,
-                      proxy.height = "400px"
-                    )
                 )
               )
-              
-            )
-          ),
-          ## Optimal Preference map ----
-          argonTab(
-            tabName = "Class Preference Map",
-            active = FALSE,
-            argonRow(
-              argonColumn(
-                width = 2,
-                uiOutput("selectPrefClass"),
-                checkboxInput("optimalPref3D", "3D Plot", FALSE),
-                conditionalPanel(
-                  condition = "!input.optimalPref3D",
-                  checkboxInput("optimalPrefInterpolate", "Interpolate", TRUE),
-                  conditionalPanel(
-                    condition = "!input.optimalPrefInterpolate",
-                    numericInput(
-                      "optimalPrefNbPoints",
-                      "Number of points",
-                      50,
-                      min = 10,
-                      max = 150,
-                      step = 10
-                    )
+            ),
+            ## Optimal Prediction map ----
+            
+            argonTab(
+              tabName = "Class Prediction Map",
+              active = F,
+              argonRow(
+                argonColumn(
+                  width = 2,
+                  uiOutput("selectClass"),
+                  selectInput(
+                    "optimalModelFormula",
+                    label = "Formula",
+                    choices = c("Vector", "Circular", "Elliptic", "Quadratic"),
+                    selected = "Quadratic"
                   ),
-                  checkboxInput("optimalPrefContour", "Plot Contour", FALSE),
+                  checkboxInput("optimalPred3D", "3D Plot", FALSE),
                   conditionalPanel(
-                    condition = "input.optimalPrefContour",
-                    numericInput("optimalPrefContourStep", "Contour Step", 10, min =
-                                   1)
-                  ),
-                  checkboxInput("optimalPrefShowProds", "Show Product Names", FALSE),
-                  checkboxInput("optimalPrefShowProdDots", "Show Product Points", FALSE),
-                  checkboxInput("optimalPrefChangeColors", "Change Label Colors", FALSE),
-                  conditionalPanel(
-                    condition = "input.optimalPrefChangeColors",
-                    colourpicker::colourInput(
-                      inputId = "optimalPrefContourColor",
-                      label = "Contour Color:",
-                      palette = "limited",
-                      value = "black"
+                    condition = "!input.optimalPred3D",
+                    checkboxInput("optimalPredInterpolate", "Interpolate", TRUE),
+                    conditionalPanel(
+                      condition = "!input.optimalPredInterpolate",
+                      numericInput(
+                        "optimalPredNbPoints",
+                        "Number of points",
+                        50,
+                        min = 10,
+                        max = 150,
+                        step = 10
+                      )
                     ),
-                    colourpicker::colourInput(
-                      inputId = "optimalPrefProdColor",
-                      label = "Product Color:",
-                      palette = "limited",
-                      value = "white"
+                    checkboxInput("optimalPredContour", "Plot Contour", FALSE),
+                    conditionalPanel(
+                      condition = "input.optimalPredContour",
+                      numericInput("optimalPredContourStep", "Contour Step", 1.5, min =
+                                     0.25)
+                    ),
+                    checkboxInput("optimalPredShowProds", "Show Product Names", FALSE),
+                    checkboxInput("optimalPredShowProdDots", "Show Product Points", FALSE),
+                    checkboxInput("optimalPredChangeColors", "Change Label Colors", FALSE),
+                    conditionalPanel(
+                      condition = "input.optimalPredChangeColors",
+                      colourpicker::colourInput(
+                        inputId = "optimalPredContourColor",
+                        label = "Contour Color:",
+                        palette = "limited",
+                        value = "black"
+                      ),
+                      colourpicker::colourInput(
+                        inputId = "optimalPredProdColor",
+                        label = "Product Color:",
+                        palette = "limited",
+                        value = "white"
+                      )
                     )
                   )
-                )
-              ),
-              argonColumn(
-                width = 9,
-                center = T,
-                conditionalPanel(
-                  condition = "!input.optimalPref3D",
-                  plotOutput("mapOptimalPrefPlot", height = "100%") %>%
-                    withSpinner(
-                      color = "#5e72e4",
-                      type = 7,
-                      proxy.height = "400px"
-                    ),
-                  hidden(downloadButton(
-                    'downloadOptimalPrefPlot', "Download PNG"
-                  ))
                 ),
-                conditionalPanel(
-                  condition = "input.optimalPref3D",
-                  plotlyOutput("mapOptimalPrefPlotly", height = "627px") %>%
-                    withSpinner(
-                      color = "#5e72e4",
-                      type = 7,
-                      proxy.height = "400px"
-                    )
+                argonColumn(
+                  width = 10,
+                  center = T,
+                  uiOutput("optimalPredWarning"),
+                  conditionalPanel(
+                    condition = "!input.optimalPred3D",
+                    plotOutput("mapOptimalPlot", height = "100%") %>%
+                      withSpinner(
+                        color = "#5e72e4",
+                        type = 7,
+                        proxy.height = "400px"
+                      ),
+                    hidden(downloadButton(
+                      'downloadOptimalPredPlot', "Download PNG"
+                    ))
+                  ),
+                  conditionalPanel(
+                    condition = "input.optimalPred3D",
+                    plotlyOutput("mapOptimalPlotly", height = "627px") %>%
+                      withSpinner(
+                        color = "#5e72e4",
+                        type = 7,
+                        proxy.height = "400px"
+                      )
+                  )
                 )
+                
               )
-              
+            ),
+            ## Optimal Preference map ----
+            argonTab(
+              tabName = "Class Preference Map",
+              active = FALSE,
+              argonRow(
+                argonColumn(
+                  width = 2,
+                  uiOutput("selectPrefClass"),
+                  checkboxInput("optimalPref3D", "3D Plot", FALSE),
+                  conditionalPanel(
+                    condition = "!input.optimalPref3D",
+                    checkboxInput("optimalPrefInterpolate", "Interpolate", TRUE),
+                    conditionalPanel(
+                      condition = "!input.optimalPrefInterpolate",
+                      numericInput(
+                        "optimalPrefNbPoints",
+                        "Number of points",
+                        50,
+                        min = 10,
+                        max = 150,
+                        step = 10
+                      )
+                    ),
+                    checkboxInput("optimalPrefContour", "Plot Contour", FALSE),
+                    conditionalPanel(
+                      condition = "input.optimalPrefContour",
+                      numericInput("optimalPrefContourStep", "Contour Step", 10, min =
+                                     1)
+                    ),
+                    checkboxInput("optimalPrefShowProds", "Show Product Names", FALSE),
+                    checkboxInput("optimalPrefShowProdDots", "Show Product Points", FALSE),
+                    checkboxInput("optimalPrefChangeColors", "Change Label Colors", FALSE),
+                    conditionalPanel(
+                      condition = "input.optimalPrefChangeColors",
+                      colourpicker::colourInput(
+                        inputId = "optimalPrefContourColor",
+                        label = "Contour Color:",
+                        palette = "limited",
+                        value = "black"
+                      ),
+                      colourpicker::colourInput(
+                        inputId = "optimalPrefProdColor",
+                        label = "Product Color:",
+                        palette = "limited",
+                        value = "white"
+                      )
+                    )
+                  )
+                ),
+                argonColumn(
+                  width = 9,
+                  center = T,
+                  conditionalPanel(
+                    condition = "!input.optimalPref3D",
+                    plotOutput("mapOptimalPrefPlot", height = "100%") %>%
+                      withSpinner(
+                        color = "#5e72e4",
+                        type = 7,
+                        proxy.height = "400px"
+                      ),
+                    hidden(downloadButton(
+                      'downloadOptimalPrefPlot', "Download PNG"
+                    ))
+                  ),
+                  conditionalPanel(
+                    condition = "input.optimalPref3D",
+                    plotlyOutput("mapOptimalPrefPlotly", height = "627px") %>%
+                      withSpinner(
+                        color = "#5e72e4",
+                        type = 7,
+                        proxy.height = "400px"
+                      )
+                  )
+                )
+                
+              )
             )
           )
         )
+        
       )
+      
     )
     
   ),
   
   
   # Footer ----
-  footer = NULL
+  footer = verbatimTextOutput("tab")
 )
