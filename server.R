@@ -1084,4 +1084,60 @@ server <- function(input, output, session) {
   })
   
   
+  # Optimal Class Scores ----
+  
+  optimalClassMeans = reactive({
+    optimalClassMeans = NULL
+    for (class in unique(optimalClasses())) {
+      optimalClassMeans = cbind(optimalClassMeans, df.hedo()[, which(optimalClasses() == class)] %>%
+                                  as.data.frame() %>% rowMeans())
+    }
+    rownames(optimalClassMeans) = rownames(df.hedo())
+    return(optimalClassMeans)
+  })
+  
+  optimalClassMeansText = reactive({
+    paste("Average Score", round(optimalClassMeans(), 3)) %>% matrix(nrow = nrow(optimalClassMeans()))
+  })
+  
+  optimalClasses = eventReactive(input$run, {
+    plot_ly(
+      x = as.factor(unique(isolate(optimalClasses(
+        
+      )))),
+      y = rownames(isolate(optimalClassMeans())),
+      z = isolate(optimalClassMeans()),
+      type = "heatmap",
+      source = "heatplot",
+      xgap = 5,
+      ygap = 3,
+      hoverinfo = "text",
+      text = isolate(optimalClassMeansText())
+    ) %>%
+      layout(xaxis = list(title = "", dtick = 1),
+             yaxis = list(title = ""))
+  })
+  
+  output$optimalClassCharac = renderPlotly(optimalClasses())
+  
+  optiClicked <- reactive({
+    event_data("plotly_click", source = "heatplot")
+  })
+  
+  observeEvent(optiClicked(), {
+    table = t(
+      getPCA(
+        df.senso(),
+        input$sensoProduct,
+        input$sensoJudge,
+        input$sensoSession
+      )$X[unlist(optiClicked()[["pointNumber"]])[1] + 1, -1]
+    ) %>%
+      round(3) %>%
+      as.data.frame() %>%
+      rownames_to_column(var = paste(optiClicked()[["y"]], "Characteristics"))
+    colnames(table)[2] = "Average Judge Score"
+    showModal(modalDialog(easyClose = T, renderDataTable(table[order(table[, 2], decreasing =
+                                                                       T),])))
+  })
 }
