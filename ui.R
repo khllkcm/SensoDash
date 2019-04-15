@@ -1133,6 +1133,19 @@ ui <- argonDashPage(
                 )
                 
               )
+            ),
+            argonTab(
+              tabName = "Class Scores",
+              active = FALSE,
+              argonColumn(
+                center = T,
+                plotlyOutput("optimalClassCharac", height = "100%") %>%
+                  withSpinner(
+                    color = "#5e72e4",
+                    type = 7,
+                    proxy.height = "400px"
+                  )
+              )
             )
           )
         )

@@ -723,7 +723,7 @@ server <- function(input, output, session) {
       rownames_to_column(var = paste(clicked()[["y"]], "Characteristics"))
     colnames(table)[2] = "Average Judge Score"
     showModal(modalDialog(easyClose = T, renderDataTable(table[order(table[, 2], decreasing =
-                                                                       T),])))
+                                                                       T), ])))
   })
   
   
@@ -761,7 +761,7 @@ server <- function(input, output, session) {
       ) +
         geom_line() +
         geom_point() +
-        facet_wrap(~ Measure, scales = "free") +
+        facet_wrap( ~ Measure, scales = "free") +
         xlab("Number of Clusters") +
         ylab("Measure") +
         scale_x_continuous(breaks = unique(valMeasures()$`Number of Clusters`)) +
@@ -903,6 +903,8 @@ server <- function(input, output, session) {
   
   optimalPredDiscreteSpace = reactive({
     req(mapBisc())
+    req(optimalClasses())
+    req(input$optimalClass)
     makeGrid(mapBisc()[, c(which(optimalClasses() == input$optimalClass),
                            ncol(mapBisc()) - 1,
                            ncol(mapBisc()))], input$optimalPredNbPoints)
@@ -1084,4 +1086,61 @@ server <- function(input, output, session) {
   })
   
   
+  # Optimal Class Scores ----
+  
+  optimalClassMeans = reactive({
+    optimalClassMeans = NULL
+    for (class in unique(optimalClasses())) {
+      optimalClassMeans = cbind(optimalClassMeans,
+                                df.hedo()[, which(optimalClasses() == class)] %>%
+                                  as.data.frame() %>% rowMeans())
+    }
+    rownames(optimalClassMeans) = rownames(df.hedo())
+    return(optimalClassMeans)
+  })
+  
+  optimalClassMeansText = reactive({
+    paste("Average Score", round(optimalClassMeans(), 3)) %>% matrix(nrow = nrow(optimalClassMeans()))
+  })
+  
+  
+  
+  output$optimalClassCharac = renderPlotly({
+    plot_ly(
+      x = as.factor(unique(isolate(
+        optimalClasses()
+      ))),
+      y = rownames(isolate(optimalClassMeans())),
+      z = isolate(optimalClassMeans()),
+      type = "heatmap",
+      source = "heatplot",
+      xgap = 5,
+      ygap = 3,
+      hoverinfo = "text",
+      text = isolate(optimalClassMeansText())
+    ) %>%
+      layout(xaxis = list(title = "", dtick = 1),
+             yaxis = list(title = ""))
+  })
+  
+  optiClicked <- reactive({
+    event_data("plotly_click", source = "heatplot")
+  })
+  
+  observeEvent(optiClicked(), {
+    table = t(
+      getPCA(
+        df.senso(),
+        input$sensoProduct,
+        input$sensoJudge,
+        input$sensoSession
+      )$X[unlist(optiClicked()[["pointNumber"]])[1] + 1, -1]
+    ) %>%
+      round(3) %>%
+      as.data.frame() %>%
+      rownames_to_column(var = paste(optiClicked()[["y"]], "Characteristics"))
+    colnames(table)[2] = "Average Judge Score"
+    showModal(modalDialog(easyClose = T, renderDataTable(table[order(table[, 2], decreasing =
+                                                                       T), ])))
+  })
 }

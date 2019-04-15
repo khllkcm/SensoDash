@@ -220,7 +220,7 @@ plotMap = function(predictedScore,
 }
 
 getOptimalClasses <- function(method, t.df.hedo, k) {
-  switch (
+  switch(
     method,
     "hierarchical" = {
       distance = dist(t.df.hedo)
