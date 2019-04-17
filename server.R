@@ -723,7 +723,7 @@ server <- function(input, output, session) {
       rownames_to_column(var = paste(clicked()[["y"]], "Characteristics"))
     colnames(table)[2] = "Average Judge Score"
     showModal(modalDialog(easyClose = T, renderDataTable(table[order(table[, 2], decreasing =
-                                                                       T), ])))
+                                                                       T),])))
   })
   
   
@@ -761,7 +761,7 @@ server <- function(input, output, session) {
       ) +
         geom_line() +
         geom_point() +
-        facet_wrap( ~ Measure, scales = "free") +
+        facet_wrap(~ Measure, scales = "free") +
         xlab("Number of Clusters") +
         ylab("Measure") +
         scale_x_continuous(breaks = unique(valMeasures()$`Number of Clusters`)) +
@@ -1102,9 +1102,6 @@ server <- function(input, output, session) {
   optimalClassMeansText = reactive({
     paste("Average Score", round(optimalClassMeans(), 3)) %>% matrix(nrow = nrow(optimalClassMeans()))
   })
-  
-  
-  
   output$optimalClassCharac = renderPlotly({
     plot_ly(
       x = as.factor(unique(isolate(
@@ -1141,6 +1138,7 @@ server <- function(input, output, session) {
       rownames_to_column(var = paste(optiClicked()[["y"]], "Characteristics"))
     colnames(table)[2] = "Average Judge Score"
     showModal(modalDialog(easyClose = T, renderDataTable(table[order(table[, 2], decreasing =
-                                                                       T), ])))
+                                                                       T),])))
+    
   })
 }
