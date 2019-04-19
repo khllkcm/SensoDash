@@ -1,27 +1,29 @@
+# Shiny
 library(shiny)
 library(argonR)
 library(argonDash)
 library(shinycssloaders)
-library(DT)
-library(factoextra)
 library(shinyjs)
+# Shiny widgets
 library(tools)
-library(tibble)
 library(colourpicker)
-library(ggplot2)
-library(viridis)
+library(DT)
+# Data manipulation
 library(doBy)
-library(FactoMineR)
 library(reshape2)
-library(plyr)
-library(tibble)
+library(tidyverse)
+# Graphics
 library(metR)
 library(fields)
 library(plotly)
+library(viridis)
+# PCA
+library(factoextra)
+library(FactoMineR)
+# Clustering
 library(cluster)
 library(kohonen)
 library(clValid)
-library(tidyr)
 
 getPCA = function(df.senso, product, judge, session) {
   df.X = summaryBy(
