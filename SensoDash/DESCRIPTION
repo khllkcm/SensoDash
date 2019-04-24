@@ -1,0 +1,11 @@
+Package: SensoDash
+Title: Sensory Analysis and Consumer Data Segmentation
+Version: 0.0.0.9000
+Authors@R: person("Khalil", "Kacem", email = "khalil@kacem.xyz", role = c("aut","cre"))
+Description: Consumer data segmentation and preference mapping through an interactive app.
+Depends: R (>= 3.5.0)
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.1.1
+Imports: shiny, argonR, argonDash, shinycssloaders, shinyjs, tools, colourpicker, DT, doBy, reshape2, tidyverse, metR, fields, plotly, viridis, factoextra, FactoMineR, cluster, kohonen, clValid
