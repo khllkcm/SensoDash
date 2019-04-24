@@ -12,6 +12,7 @@ library(DT)
 library(doBy)
 library(reshape2)
 library(tidyverse)
+library(plyr)
 # Graphics
 library(metR)
 library(fields)
@@ -28,7 +29,7 @@ library(clValid)
 getPCA = function(df.senso, product, judge, session) {
   df.X = summaryBy(
     as.formula(paste(".", product, sep = "~")),
-    data =  df.senso[, -which(names(df.senso) %in% c(judge, session))],
+    data =  df.senso[, !(names(df.senso) %in% c(judge, session))],
     FUN = c(mean),
     na.rm = T,
     keep.names = T
