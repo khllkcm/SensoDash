@@ -8,4 +8,4 @@ License: GPL-3
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.1
-Imports: shiny, argonR, argonDash, shinycssloaders, shinyjs, tools, colourpicker, DT, doBy, reshape2, tidyverse, metR, fields, plotly, viridis, factoextra, FactoMineR, cluster, kohonen, clValid
+Imports: shiny, argonR, argonDash, shinycssloaders, shinyjs, tools, colourpicker, DT, doBy, reshape2, tidyverse, plyr, metR, fields, plotly, viridis, factoextra, FactoMineR, cluster, kohonen, clValid

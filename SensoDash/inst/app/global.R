@@ -12,6 +12,7 @@ library(DT)
 library(doBy)
 library(reshape2)
 library(tidyverse)
+library(plyr)
 # Graphics
 library(metR)
 library(fields)
