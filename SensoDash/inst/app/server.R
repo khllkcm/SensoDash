@@ -39,6 +39,7 @@ server <- function(input, output, session) {
       header = input$headerHedo,
       sep = input$sepHedo,
       quote = input$quoteHedo,
+      dec = input$decHedo,
       row.names = 1
     )
     return(df)
@@ -56,8 +57,8 @@ server <- function(input, output, session) {
     selectInput(
       inputId = "sensoSession",
       label = "Session:",
-      choices = colnames(df.sensoForDisplay()),
-      selected = colnames(df.sensoForDisplay())[1]
+      choices = c("NA",colnames(df.sensoForDisplay())),
+      selected = "NA"
     )
   )
   
@@ -65,8 +66,8 @@ server <- function(input, output, session) {
     selectInput(
       inputId = "sensoJudge",
       label = "Judge:",
-      choices = colnames(df.sensoForDisplay()),
-      selected = colnames(df.sensoForDisplay())[2]
+      choices = c("NA",colnames(df.sensoForDisplay())),
+      selected = "NA"
     )
   )
   
@@ -75,7 +76,7 @@ server <- function(input, output, session) {
       inputId = "sensoProduct",
       label = "Product:",
       choices = colnames(df.sensoForDisplay()),
-      selected = colnames(df.sensoForDisplay())[3]
+      selected = colnames(df.sensoForDisplay())[1]
     )
   )
   
