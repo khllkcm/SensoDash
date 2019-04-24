@@ -615,7 +615,7 @@ server <- function(input, output, session) {
     fviz_pca_ind(
       obj.pca.conso(),
       repel = input$repel,
-      habillage = as.factor(isolate(obj.classes())),
+      habillage = as.factor(obj.classes()),
       ellipse.type = "convex",
       addEllipses = T
     )
@@ -674,9 +674,7 @@ server <- function(input, output, session) {
   ## Class Preference ----
   classes = eventReactive(input$run, {
     plot_ly(
-      x = as.factor(unique(isolate(obj.classes(
-        
-      )))),
+      x = as.factor(unique(obj.classes())),
       y = rownames(isolate(classMeans())),
       z = isolate(classMeans()),
       type = "heatmap",
