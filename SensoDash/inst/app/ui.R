@@ -151,11 +151,10 @@ ui <- argonDashPage(
                   argonColumn(
                     width = 6,
                     radioButtons(
-                      "dispHedo",
-                      "Display",
-                      choices = c(Head = "head",
-                                  All = "all"),
-                      selected = "head"
+                      "decHedo",
+                      "Decimal",
+                      choices = c(",","."),
+                      selected = "."
                     )
                   )
                 ),
@@ -229,11 +228,10 @@ ui <- argonDashPage(
                   argonColumn(
                     width = 6,
                     radioButtons(
-                      "dispSenso",
-                      "Display",
-                      choices = c(Head = "head",
-                                  All = "all"),
-                      selected = "head"
+                      "decSenso",
+                      "Decimal",
+                      choices = c(",","."),
+                      selected = "."
                     )
                   )
                 ),

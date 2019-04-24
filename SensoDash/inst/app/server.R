@@ -14,14 +14,10 @@ server <- function(input, output, session) {
       header = input$headerHedo,
       sep = input$sepHedo,
       quote = input$quoteHedo,
+      dec = input$decHedo,
       row.names = 1
     )
-    if (input$dispHedo == "head") {
-      return(head(df))
-    }
-    else {
-      return(df)
-    }
+    return(df)
   })
   
   df.hedo = eventReactive(input$validateHedo, {
@@ -92,14 +88,10 @@ server <- function(input, output, session) {
       input$fileSenso$datapath,
       header = input$headerSenso,
       sep = input$sepSenso,
-      quote = input$quoteSenso
+      quote = input$quoteSenso,
+      dec = input$decSenso
     )
-    if (input$dispSenso == "head") {
-      return(head(df))
-    }
-    else {
-      return(df)
-    }
+    return(df)
   })
   
   df.senso = eventReactive(input$validateSenso, {
@@ -118,10 +110,13 @@ server <- function(input, output, session) {
       input$fileSenso$datapath,
       header = input$headerSenso,
       sep = input$sepSenso,
-      quote = input$quoteSenso
+      quote = input$quoteSenso,
+      dec = input$decSenso
     )
-    df[[input$sensoSession]] = as.factor(df[[input$sensoSession]])
-    df[[input$sensoJudge]] = as.factor(df[[input$sensoJudge]])
+    if (input$sensoSession != "NA")
+      df[[input$sensoSession]] = as.factor(df[[input$sensoSession]])
+    if (input$sensoJudge != "NA")
+      df[[input$sensoJudge]] = as.factor(df[[input$sensoJudge]])
     df[[input$sensoProduct]] = as.factor(df[[input$sensoProduct]])
     return(df)
   })
