@@ -53,19 +53,17 @@ server <- function(input, output, session) {
     selectInput(
       inputId = "sensoSession",
       label = "Session:",
-      choices = c("NA",colnames(df.sensoForDisplay())),
+      choices = c("NA", colnames(df.sensoForDisplay())),
       selected = "NA"
     )
   )
   
-  output$selectSensoJudge = renderUI(
-    selectInput(
-      inputId = "sensoJudge",
-      label = "Judge:",
-      choices = c("NA",colnames(df.sensoForDisplay())),
-      selected = "NA"
-    )
-  )
+  output$selectSensoJudge = renderUI(selectInput(
+    inputId = "sensoJudge",
+    label = "Judge:",
+    choices = c("NA", colnames(df.sensoForDisplay())),
+    selected = "NA"
+  ))
   
   output$selectSensoProduct = renderUI(
     selectInput(
@@ -717,7 +715,7 @@ server <- function(input, output, session) {
       rownames_to_column(var = paste(clicked()[["y"]], "Characteristics"))
     colnames(table)[2] = "Average Judge Score"
     showModal(modalDialog(easyClose = T, renderDataTable(table[order(table[, 2], decreasing =
-                                                                       T),])))
+                                                                       T), ])))
   })
   
   
@@ -755,7 +753,7 @@ server <- function(input, output, session) {
       ) +
         geom_line() +
         geom_point() +
-        facet_wrap(~ Measure, scales = "free") +
+        facet_wrap( ~ Measure, scales = "free") +
         xlab("Number of Clusters") +
         ylab("Measure") +
         scale_x_continuous(breaks = unique(valMeasures()$`Number of Clusters`)) +
@@ -782,19 +780,25 @@ server <- function(input, output, session) {
   #Optimal ----
   
   observeEvent(input$optimal, {
-    showModal(
-      modalDialog(
-        size = "s",
-        title = "Optimal Scores",
-        renderTable(optimalScores(isolate(clvalid(
-          
-        ))),
-        rownames = T),
-        easyClose = T,
-        footer = NULL
-      )
-    )
+    showModal(modalDialog(
+      size = "s",
+      title = "Optimal Scores",
+      renderTable(optimalScores(isolate(clvalid())),
+                    rownames = T),
+      renderUI(downloadButton('downloadScoreTable', "Download Table")),
+      easyClose = T,
+      footer = NULL
+    ))
   })
+  
+  output$downloadScoreTable <- downloadHandler(
+    filename = function() {
+      'optimalScores.csv'
+    },
+    content = function(file) {
+      write.csv(optimalScores(isolate(clvalid())),file, row.names = F)
+    }
+  )
   
   output$downloadValPlot <- downloadHandler(
     filename = function() {
@@ -1132,7 +1136,7 @@ server <- function(input, output, session) {
       rownames_to_column(var = paste(optiClicked()[["y"]], "Characteristics"))
     colnames(table)[2] = "Average Judge Score"
     showModal(modalDialog(easyClose = T, renderDataTable(table[order(table[, 2], decreasing =
-                                                                       T),])))
+                                                                       T), ])))
     
   })
 }

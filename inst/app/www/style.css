@@ -80,3 +80,14 @@ ul {
 .btn-default{
   margin-bottom: 10px;
 }
+
+
+#downloadScoreTable {
+  margin-top: 20px;
+  margin-bottom: 0;
+}
+
+.shiny-html-output .shiny-bound-output{
+  width: 350px;
+  text-align: center;
+}
