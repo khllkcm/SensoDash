@@ -19,7 +19,7 @@ server <- function(input, output, session) {
     )
     return(df)
   })
-  
+
   df.hedo = eventReactive(input$validateHedo, {
     if (test)
       return(read.csv("hedo.csv", sep = ';', row.names = 1))
@@ -40,40 +40,42 @@ server <- function(input, output, session) {
     )
     return(df)
   })
-  
+
   ## Display Dataset Hedo ----
   output$contentsHedo <- renderDataTable({
     datatable(df.hedoForDisplay(),
               options = list(scrollX = TRUE, processing = FALSE))
   })
-  
+
   ## Dataset Senso ----
-  
+
   output$selectSensoSession = renderUI(
     selectInput(
       inputId = "sensoSession",
       label = "Session:",
-      choices = c("NA", colnames(df.sensoForDisplay())),
-      selected = "NA"
+      choices = colnames(df.sensoForDisplay()),
+      selected = colnames(df.sensoForDisplay())[1]
     )
   )
-  
-  output$selectSensoJudge = renderUI(selectInput(
-    inputId = "sensoJudge",
-    label = "Judge:",
-    choices = c("NA", colnames(df.sensoForDisplay())),
-    selected = "NA"
-  ))
-  
+
+  output$selectSensoJudge = renderUI(
+    selectInput(
+      inputId = "sensoJudge",
+      label = "Judge:",
+      choices = colnames(df.sensoForDisplay()),
+      selected = colnames(df.sensoForDisplay())[2]
+    )
+  )
+
   output$selectSensoProduct = renderUI(
     selectInput(
       inputId = "sensoProduct",
       label = "Product:",
       choices = colnames(df.sensoForDisplay()),
-      selected = colnames(df.sensoForDisplay())[1]
+      selected = colnames(df.sensoForDisplay())[3]
     )
   )
-  
+
   df.sensoForDisplay = reactive({
     req(input$fileSenso)
     validate(need(
@@ -91,7 +93,7 @@ server <- function(input, output, session) {
     )
     return(df)
   })
-  
+
   df.senso = eventReactive(input$validateSenso, {
     if (test)
       return(read.csv("senso.csv"))
@@ -118,20 +120,20 @@ server <- function(input, output, session) {
     df[[input$sensoProduct]] = as.factor(df[[input$sensoProduct]])
     return(df)
   })
-  
+
   ## Display Dataset Senso ----
   output$contentsSenso <- renderDataTable({
     datatable(df.sensoForDisplay(),
               options = list(scrollX = TRUE, processing = FALSE))
   })
-  
+
   ## ANOVA ----
   output$selectAnovaVar = renderUI(selectInput(
     inputId = "anovaVar",
     label = "Variable: ",
     choices = names(Filter(is.numeric, df.senso()))
   ))
-  
+
   output$selectAnovaFactors = renderUI(
     selectInput(
       inputId = "anovaFactors",
@@ -140,39 +142,39 @@ server <- function(input, output, session) {
       multiple = TRUE
     )
   )
-  
+
   anovaFactors = reactive({
     req(input$anovaFactors)
   })
-  
+
   output$anova = renderPrint({
     summary(aov(as.formula(paste(
       input$anovaVar, " ~ ", paste(anovaFactors(), collapse = "*")
     )), data = df.senso()))
   })
-  
+
   ## Boxplot ----
-  
+
   output$selectBoxplotVar = renderUI(selectInput(
     inputId = "boxplotVar",
     label = "Variable: ",
     choices = names(Filter(is.numeric, df.senso()))
   ))
-  
+
   output$selectBoxplotFactor = renderUI(selectInput(
     inputId = "boxplotFactor",
     label = "Factor:",
     choices = names(Filter(is.factor, df.senso()))
   ))
-  
+
   boxplotVar = reactive({
     req(input$boxplotVar)
   })
-  
+
   boxplotFactor = reactive({
     req(input$boxplotFactor)
   })
-  
+
   output$boxPlot <-  renderPlotly({
     plot_ly(
       data = df.senso(),
@@ -182,7 +184,7 @@ server <- function(input, output, session) {
       type = "box"
     )
   })
-  
+
   ## PCA ----
   obj.pca = reactive({
     req(input$sensoProduct)
@@ -196,26 +198,32 @@ server <- function(input, output, session) {
       rownames(res.PCA$ind$coord) = rownames(df.hedo())
     return(res.PCA)
   })
-  
+
   ## Scree plot ----
-  
+
   screePlot = reactive(fviz_screeplot(obj.pca(), choice = input$choice))
   output$screePlot <- renderPlot({
     req(screePlot())
     on.exit(showElement("downloadScreePlot"))
     screePlot()
   }, height = 600, width = 600)
-  
+
   output$downloadScreePlot <- downloadHandler(
     filename = function() {
       'screeplot.png'
     },
     content = function(file) {
-      ggsave(file, plot = screePlot(), device = "png")
+      ggsave(
+        file,
+        plot = screePlot(),
+        device = "png",
+        width = 15,
+        height = 15
+      )
     }
   )
-  
-  
+
+
   ## Variable plot ----
   varPlot = reactive(
     fviz_pca_var(
@@ -231,34 +239,40 @@ server <- function(input, output, session) {
         space = "Lab"
       ) + theme_light()
   )
-  
+
   output$secondSelector = renderUI(selectInput(
     "axis_Y",
     label = "Y Axis Dimension",
     choices = seq(5)[which(seq(5) != as.numeric(input$axis_X))],
     selected = 2
   ))
-  
+
   Y_axis <- reactive({
     req(input$axis_Y)
   })
-  
+
   output$varPlot =
     renderPlot({
       req(varPlot())
       on.exit(showElement("downloadVarPlot"))
       varPlot()
     }, height = 600, width = 600)
-  
+
   output$downloadVarPlot <- downloadHandler(
     filename = function() {
       'variableplot.png'
     },
     content = function(file) {
-      ggsave(file, plot = varPlot(), device = "png")
+      ggsave(
+        file,
+        plot = varPlot(),
+        device = "png",
+        width = 15,
+        height = 15
+      )
     }
   )
-  
+
   ## Bi-Plot ----
   biPlot = reactive(
     fviz_pca_biplot(
@@ -270,36 +284,42 @@ server <- function(input, output, session) {
       axes = c(as.numeric(input$axis_X2), as.numeric(Y_axis2()))
     ) + theme_light()
   )
-  
+
   output$secondSelector2 = renderUI(selectInput(
     "axis_Y2",
     label = "Y Axis Dimension",
     choices = seq(5)[which(seq(5) != as.numeric(input$axis_X2))],
     selected = 2
   ))
-  
-  
+
+
   Y_axis2 <- reactive({
     req(input$axis_Y2)
   })
-  
+
   output$biPlot = renderPlot({
     req(biPlot())
     on.exit(showElement("downloadBiPlot"))
     biPlot()
   }, height = 600, width = 600)
-  
+
   output$downloadBiPlot <- downloadHandler(
     filename = function() {
       'biplot.png'
     },
     content = function(file) {
-      ggsave(file, plot = biPlot(), device = "png")
+      ggsave(
+        file,
+        plot = biPlot(),
+        device = "png",
+        width = 15,
+        height = 15
+      )
     }
   )
-  
+
   ## Pred Map ----
-  
+
   mapBisc <- reactive({
     req(input$currentTab)
     if (input$currentTab != "data")
@@ -311,35 +331,35 @@ server <- function(input, output, session) {
         input$sensoSession
       )
   })
-  
+
   fittedModels <- reactive({
     req(mapBisc())
     fitModel(mapBisc(), formula = input$modelFormula)
   })
-  
+
   predDiscreteSpace = reactive({
     req(mapBisc())
     makeGrid(mapBisc(), input$predNbPoints)
   })
-  
+
   predictedScores = reactive({
     scores = sapply(fittedModels(), predict, newdata = predDiscreteSpace()) %>%
       as.data.frame()
     return(scores)
   })
-  
+
   qualityMessagePred = reactive({
     predictionQuality(predictedScores())
   })
-  
+
   output$predWarning <-
     renderUI(argonAlert(
       qualityMessagePred(),
       closable = T,
       status = "info"
     ))
-  
-  
+
+
   mapPredPlot = reactive({
     req(input$predContourStep)
     req(input$predNbPoints)
@@ -358,13 +378,13 @@ server <- function(input, output, session) {
       prod.col = input$predProdColor
     )
   })
-  
+
   output$mapPlot = renderPlot({
     req(mapPredPlot())
     on.exit(showElement("downloadPredPlot"))
     mapPredPlot()
   }, height = 600, width = 600)
-  
+
   output$mapPlotly = renderPlotly({
     plotMap(
       predictedScores() %>% rowMeans(na.rm = T),
@@ -373,35 +393,41 @@ server <- function(input, output, session) {
       plot.3D = input$pred3D
     )
   })
-  
+
   output$downloadPredPlot <- downloadHandler(
     filename = function() {
       'predmap.png'
     },
     content = function(file) {
-      ggsave(file, plot = mapPredPlot(), device = "png")
+      ggsave(
+        file,
+        plot = mapPredPlot(),
+        device = "png",
+        width = 15,
+        height = 15
+      )
     }
   )
   ## Pref Map ----
-  
+
   prefPredictedScores = reactive({
     scores = sapply(fittedModels(), predict, newdata = prefDiscreteSpace()) %>%
       as.data.frame()
     return(scores)
   })
-  
+
   prefDiscreteSpace = reactive({
     req(mapBisc())
     makeGrid(mapBisc(), input$prefNbPoints)
   })
-  
-  
+
+
   preferences = reactive({
     mapply(function(x, y) {
       as.numeric(x > mean(y))
     }, prefPredictedScores(), df.hedo()) %>% as.data.frame()
   })
-  
+
   mapPrefPlot = reactive({
     req(input$prefContourStep)
     req(input$prefNbPoints)
@@ -421,14 +447,14 @@ server <- function(input, output, session) {
       prod.col = input$prefProdColor
     )
   })
-  
+
   output$mapPrefPlot = renderPlot({
     req(mapPrefPlot())
     on.exit(showElement("downloadPrefPlot"))
     mapPrefPlot()
   }, height = 600, width = 600)
-  
-  
+
+
   output$mapPrefPlotly = renderPlotly({
     plotMap(
       100 * preferences() %>% rowMeans(na.rm = T),
@@ -438,24 +464,30 @@ server <- function(input, output, session) {
       plot.3D = input$pref3D
     )
   })
-  
+
   output$downloadPrefPlot <- downloadHandler(
     filename = function() {
       'prefmap.png'
     },
     content = function(file) {
-      ggsave(file, plot = mapPrefPlot(), device = "png")
+      ggsave(
+        file,
+        plot = mapPrefPlot(),
+        device = "png",
+        width = 15,
+        height = 15
+      )
     }
   )
-  
+
   ## Clustering Objects----
-  
+
   ### General Objects ----
-  
+
   obj.pca.conso = reactive({
     PCA(t(df.hedo()), graph = F)
   })
-  
+
   classMeans = reactive({
     classMeans = NULL
     for (class in unique(obj.classes())) {
@@ -465,13 +497,13 @@ server <- function(input, output, session) {
     rownames(classMeans) = rownames(df.hedo())
     return(classMeans)
   })
-  
+
   classMeansText = reactive({
     paste("Average Score", round(classMeans(), 3)) %>% matrix(nrow = nrow(classMeans()))
   })
-  
+
   observeEvent(input$clusterAlgo, invalidateLater(1000, session))
-  
+
   ### Classes ----
   obj.classes = reactive({
     if (input$clusterAlgo == "Hierarchical") {
@@ -499,57 +531,57 @@ server <- function(input, output, session) {
     }
     return(sort(classes))
   })
-  
+
   ### Hierarchical CLustering ----
   obj.hc = reactive({
     distance = dist(t(df.hedo()), method = input$hclusterDist)
     hc = hclust(distance, method = input$hclusterAgg)
     return(hc)
   })
-  
+
   ### K-means ----
   obj.kmeans = reactive({
     kmeans(t(df.hedo()),
            centers = input$kmeansNum,
            algorithm = input$kmeansAlgo)
   })
-  
+
   ### DIANA ----
   obj.diana = reactive({
     diana(t(df.hedo()),
           diss = F,
           metric = input$dianaMetric)
   })
-  
+
   ### CLARA ----
   obj.clara = reactive({
     clara(t(df.hedo()),
           metric = input$claraMetric,
           k = input$claraNum)
   })
-  
+
   ### PAM ----
   obj.pam = reactive({
     pam(t(df.hedo()),
         metric = input$pamMetric,
         k = input$pamNum)
   })
-  
+
   ### SOM ----
   obj.som = reactive({
     som(t(df.hedo()),
         grid = somgrid(input$somx, input$somy, "hexagonal"))
   })
-  
+
   ### SOTA ----
   obj.sota = reactive({
     sota(t(df.hedo()),
          maxCycles = input$sotaNum - 1)
   })
-  
-  
+
+
   ## Tabs ----
-  
+
   observe({
     if (input$clusterAlgo == 'Hierarchical') {
       showTab(inputId = "tab-23",
@@ -564,15 +596,15 @@ server <- function(input, output, session) {
       showTab(inputId = "tab-23",
               target = "Inertia",
               select = T)
-      
+
     }
     else{
       hideTab(inputId = "tab-23", target = "Inertia")
     }
   })
-  
+
   ## Inertia ----
-  
+
   inertia = eventReactive(input$run, {
     if (input$clusterAlgo == "Hierarchical") {
       return(
@@ -607,7 +639,7 @@ server <- function(input, output, session) {
   observeEvent(input$run, {
     output$inertia <- renderPlotly(inertia())
   })
-  
+
   ## Clusters ----
   clusterPlot = reactive({
     fviz_pca_ind(
@@ -636,20 +668,28 @@ server <- function(input, output, session) {
       'clusterplot.png'
     },
     content = function(file) {
-      ggsave(file, plot = clusterPlot(), device = "png")
+      ggsave(
+        file,
+        plot = clusterPlot(),
+        device = "png",
+        width = 15,
+        height = 15
+      )
     }
   )
-  
+
   ## Dendogram ----
   dendroPlot = reactive({
-    fviz_dend(isolate(obj.hc()), color_labels_by_k = TRUE)
+    fviz_dend(isolate(obj.hc()),
+              k = input$hclusterNum,
+              color_labels_by_k = TRUE)
   })
   dendrogram = eventReactive(input$run, {
     input$run
     if (input$clusterAlgo == "Hierarchical")
       dendroPlot()
   })
-  
+
   observeEvent(input$clusterAlgo, {
     output$dendrogram <- renderPlot(NULL, height = 100, width = 100)
   })
@@ -665,10 +705,16 @@ server <- function(input, output, session) {
       'dendroplot.png'
     },
     content = function(file) {
-      ggsave(file, plot = dendroPlot(), device = "png")
+      ggsave(
+        file,
+        plot = dendroPlot(),
+        device = "png",
+        width = 15,
+        height = 15
+      )
     }
   )
-  
+
   ## Class Preference ----
   classes = eventReactive(input$run, {
     plot_ly(
@@ -685,7 +731,7 @@ server <- function(input, output, session) {
       layout(xaxis = list(title = "", dtick = 1),
              yaxis = list(title = ""))
   })
-  
+
   output$classCharac = renderPlotly(classes())
   observeEvent(input$clusterAlgo, {
     output$classCharac = renderPlotly({
@@ -696,11 +742,11 @@ server <- function(input, output, session) {
   observeEvent(input$run, {
     output$classCharac = renderPlotly(classes())
   })
-  
+
   clicked <- reactive({
     event_data("plotly_click", source = "heatplot")
   })
-  
+
   observeEvent(clicked(), {
     table = t(
       getPCA(
@@ -715,15 +761,15 @@ server <- function(input, output, session) {
       rownames_to_column(var = paste(clicked()[["y"]], "Characteristics"))
     colnames(table)[2] = "Average Judge Score"
     showModal(modalDialog(easyClose = T, renderDataTable(table[order(table[, 2], decreasing =
-                                                                       T), ])))
+                                                                       T),])))
   })
-  
-  
+
+
   observeEvent(input$clusterAlgo, {
     hideElement("downloadClusterPlot")
     hideElement("downloadDendroPlot")
   })
-  
+
   #Validity ----
   clvalid <- reactive({
     req(input$validMethod)
@@ -737,14 +783,14 @@ server <- function(input, output, session) {
       )
     )
   })
-  
+
   valMeasures <- reactive({
     clvalid() %>% measures() %>% melt(
       varnames = c("Measure", "Number of Clusters", "Method"),
       value.name = "Score"
     ) %>% drop_na()
   })
-  
+
   valPlot <- reactive({
     suppressWarnings(
       ggplot(
@@ -753,16 +799,16 @@ server <- function(input, output, session) {
       ) +
         geom_line() +
         geom_point() +
-        facet_wrap( ~ Measure, scales = "free") +
+        facet_wrap(~ Measure, scales = "free") +
         xlab("Number of Clusters") +
         ylab("Measure") +
         scale_x_continuous(breaks = unique(valMeasures()$`Number of Clusters`)) +
         theme_minimal()
     )
   })
-  
+
   output$valPlot <- renderPlot(NULL, width = 100, height = 100)
-  
+
   observeEvent(input$validClust, {
     req(input$validMethod)
     disable('validClust')
@@ -776,56 +822,120 @@ server <- function(input, output, session) {
       isolate(valPlot())
     }, height = 600)
   })
-  
+
   #Optimal ----
-  
+
   observeEvent(input$optimal, {
-    showModal(modalDialog(
-      size = "s",
-      title = "Optimal Scores",
-      renderTable(optimalScores(isolate(clvalid())),
-                    rownames = T),
-      renderUI(downloadButton('downloadScoreTable', "Download Table")),
-      easyClose = T,
-      footer = NULL
-    ))
+    showModal(
+      modalDialog(
+        size = "s",
+        title = "Optimal Scores",
+        renderTable(optimalScores(isolate(clvalid(
+
+        ))),
+        rownames = T),
+        renderUI(downloadButton(
+          'downloadScoreTable', "Download Table"
+        )),
+        easyClose = T,
+        footer = NULL
+      )
+    )
   })
-  
+
   output$downloadScoreTable <- downloadHandler(
     filename = function() {
       'optimalScores.csv'
     },
     content = function(file) {
-      write.csv(optimalScores(isolate(clvalid())),file, row.names = F)
+      write.csv(optimalScores(isolate(clvalid())), file, row.names = F)
     }
   )
-  
+
   output$downloadValPlot <- downloadHandler(
     filename = function() {
       'validationplot.png'
     },
     content = function(file) {
-      ggsave(file, plot = valPlot(), device = "png")
+      ggsave(
+        file,
+        plot = valPlot(),
+        device = "png",
+        width = 15,
+        height = 15
+      )
     }
   )
-  
+
   output$optimalMeasures <- renderUI({
     req(input$validVMethod)
-    if (input$validVMethod == "internal")
-      return(selectInput(
-        "optimalMeasure",
-        "Measure",
-        choices = c("Connectivity", "Dunn", "Silhouette")
-      ))
-    else
-      return(selectInput(
-        "optimalMeasure",
-        "Measure",
-        choices = c("APN", "AD", "ADM", "FOM")
-      ))
+    if (input$validVMethod == "internal") {
+      internal_choices = list("Connectivity", "Dunn", "Silhouette")
+      names(internal_choices) = c(
+        paste0(
+          "Connectivity / ",
+          as.character(optimalscores()[1, 2]),
+          " (",
+          as.character(optimalscores()[1, 3]),
+          ")"
+        ),
+        paste0(
+          "Dunn / ",
+          as.character(optimalscores()[2, 2]),
+          " (",
+          as.character(optimalscores()[2, 3]),
+          ")"
+        ),
+        paste0(
+          "Silhouette / ",
+          as.character(optimalscores()[3, 2]),
+          " (",
+          as.character(optimalscores()[3, 3]),
+          ")"
+        )
+      )
+      return(selectInput("optimalMeasure",
+                         "Measure",
+                         choices = internal_choices))
+    }
+    else{
+      stab_choices = list("APN", "AD", "ADM", "FOM")
+      names(stab_choices) = c(
+        paste0(
+          "APN / ",
+          as.character(optimalscores()[1, 2]),
+          " (",
+          as.character(optimalscores()[1, 3]),
+          ")"
+        ),
+        paste0(
+          "AD / ",
+          as.character(optimalscores()[2, 2]),
+          " (",
+          as.character(optimalscores()[2, 3]),
+          ")"
+        ),
+        paste0(
+          "ADM / ",
+          as.character(optimalscores()[3, 2]),
+          " (",
+          as.character(optimalscores()[3, 3]),
+          ")"
+        ),
+        paste0(
+          "FOM / ",
+          as.character(optimalscores()[4, 2]),
+          " (",
+          as.character(optimalscores()[4, 3]),
+          ")"
+        )
+      )
+      return(selectInput("optimalMeasure",
+                         "Measure",
+                         choices = stab_choices))
+    }
   })
-  
-  
+
   optimalscores <- reactive({
     req(input$validMethod)
     suppressWarnings(
@@ -838,23 +948,23 @@ server <- function(input, output, session) {
       )
     ) %>% optimalScores()
   })
-  
+
   optimalMethod <- reactive({
     optimalscores()[which(rownames(optimalscores()) == input$optimalMeasure), 2] %>%
       as.character()
   })
-  
+
   optimalNum <- reactive({
     optimalscores()[which(rownames(optimalscores()) == input$optimalMeasure), 3] %>%
       as.character() %>%
       as.numeric()
   })
-  
+
   optimalClasses <- reactive({
     req(optimalMethod())
     getOptimalClasses(optimalMethod(), t(df.hedo()), optimalNum())
   })
-  
+
   optimalClusterPlot <- reactive({
     req(optimalMethod())
     fviz_pca_ind(
@@ -865,23 +975,29 @@ server <- function(input, output, session) {
       addEllipses = T
     ) + ggtitle(optimalMethod())
   })
-  
+
   output$optimalClusterPlot <- renderPlot({
     on.exit(showElement("downloadOptimalClusterPlot"))
     optimalClusterPlot()
   }, height = 600, width = 600)
-  
-  
+
+
   output$downloadOptimalClusterPlot <- downloadHandler(
     filename = function() {
       'optimalclusterplot.png'
     },
     content = function(file) {
-      ggsave(file, plot = optimalClusterPlot(), device = "png")
+      ggsave(
+        file,
+        plot = optimalClusterPlot(),
+        device = "png",
+        width = 15,
+        height = 15
+      )
     }
   )
-  
-  
+
+
   #Pred per class ----
   output$selectClass <-
     renderUI({
@@ -889,7 +1005,7 @@ server <- function(input, output, session) {
                   "Class",
                   choices = unique(optimalClasses() %>% sort()))
     })
-  
+
   optiFittedModels <- reactive({
     req(mapBisc())
     req(optimalClasses())
@@ -898,7 +1014,7 @@ server <- function(input, output, session) {
                            ncol(mapBisc()) - 1,
                            ncol(mapBisc()))], formula = input$optimalModelFormula)
   })
-  
+
   optimalPredDiscreteSpace = reactive({
     req(mapBisc())
     req(optimalClasses())
@@ -907,24 +1023,24 @@ server <- function(input, output, session) {
                            ncol(mapBisc()) - 1,
                            ncol(mapBisc()))], input$optimalPredNbPoints)
   })
-  
+
   optimalPredictedScores = reactive({
     scores = sapply(optiFittedModels(), predict, newdata = optimalPredDiscreteSpace()) %>%
       as.data.frame()
     return(scores)
   })
-  
+
   qualityMessageOptiPred = reactive({
     predictionQuality(optimalPredictedScores())
   })
-  
+
   output$optimalPredWarning <-
     renderUI(argonAlert(
       qualityMessageOptiPred(),
       closable = T,
       status = "info"
     ))
-  
+
   mapoptimalPredPlot = reactive({
     req(input$optimalPredContourStep)
     req(input$optimalPredNbPoints)
@@ -945,13 +1061,13 @@ server <- function(input, output, session) {
       prod.col = input$optimalPredProdColor
     )
   })
-  
+
   output$mapOptimalPlot = renderPlot({
     req(mapoptimalPredPlot())
     on.exit(showElement("downloadOptimalPredPlot"))
     mapoptimalPredPlot()
   }, height = 600, width = 600)
-  
+
   output$mapOptimalPlotly = renderPlotly({
     plotMap(
       optimalPredictedScores() %>% rowMeans(na.rm = T),
@@ -962,16 +1078,22 @@ server <- function(input, output, session) {
       plot.3D = input$optimalPred3D
     )
   })
-  
+
   output$downloadOptimalPredPlot <- downloadHandler(
     filename = function() {
       'optimalPredmap.png'
     },
     content = function(file) {
-      ggsave(file, plot = mapoptimalPredPlot(), device = "png")
+      ggsave(
+        file,
+        plot = mapoptimalPredPlot(),
+        device = "png",
+        width = 15,
+        height = 15
+      )
     }
   )
-  
+
   # Pref per class ----
   output$selectPrefClass <-
     renderUI({
@@ -979,7 +1101,7 @@ server <- function(input, output, session) {
                   "Class",
                   choices = unique(optimalClasses() %>% sort()))
     })
-  
+
   optiPrefFittedModels <- reactive({
     req(mapBisc())
     req(optimalClasses())
@@ -990,13 +1112,13 @@ server <- function(input, output, session) {
       ncol(mapBisc())
     )], formula = input$optimalModelFormula)
   })
-  
+
   optimalPrefPredictedScores = reactive({
     scores = sapply(optiPrefFittedModels(), predict, newdata = optimalPrefDiscreteSpace()) %>%
       as.data.frame()
     return(scores)
   })
-  
+
   optimalPrefDiscreteSpace = reactive({
     req(mapBisc())
     makeGrid(mapBisc()[, c(
@@ -1005,15 +1127,15 @@ server <- function(input, output, session) {
       ncol(mapBisc())
     )], input$optimalPrefNbPoints)
   })
-  
-  
+
+
   optimalPreferences = reactive({
     mapply(function(x, y) {
       as.numeric(x > mean(y))
     }, optimalPrefPredictedScores(), df.hedo()[, which(optimalClasses() ==
                                                          input$optimalPrefClass)]) %>% as.data.frame()
   })
-  
+
   mapOptimalPrefPlot = reactive({
     req(input$optimalPrefContourStep)
     req(input$optimalPrefNbPoints)
@@ -1037,14 +1159,14 @@ server <- function(input, output, session) {
       prod.col = input$optimalPrefProdColor
     )
   })
-  
+
   output$mapOptimalPrefPlot = renderPlot({
     req(mapOptimalPrefPlot())
     on.exit(showElement("downloadOptimalPrefPlot"))
     mapOptimalPrefPlot()
   }, height = 600, width = 600)
-  
-  
+
+
   output$mapOptimalPrefPlotly = renderPlotly({
     plotMap(
       100 * optimalPreferences() %>% rowMeans(na.rm = T),
@@ -1058,17 +1180,23 @@ server <- function(input, output, session) {
       plot.3D = input$optimalPref3D
     )
   })
-  
+
   output$downloadOptimalPrefPlot <- downloadHandler(
     filename = function() {
       'optimalPrefmap.png'
     },
     content = function(file) {
-      ggsave(file, plot = mapOptimalPrefPlot(), device = "png")
+      ggsave(
+        file,
+        plot = mapOptimalPrefPlot(),
+        device = "png",
+        width = 15,
+        height = 15
+      )
     }
   )
-  
-  
+
+
   output$tab <- renderText({
     " "
   })
@@ -1082,10 +1210,10 @@ server <- function(input, output, session) {
       " "
     })
   })
-  
-  
+
+
   # Optimal Class Scores ----
-  
+
   optimalClassMeans = reactive({
     optimalClassMeans = NULL
     for (class in unique(optimalClasses())) {
@@ -1096,7 +1224,7 @@ server <- function(input, output, session) {
     rownames(optimalClassMeans) = rownames(df.hedo())
     return(optimalClassMeans)
   })
-  
+
   optimalClassMeansText = reactive({
     paste("Average Score", round(optimalClassMeans(), 3)) %>% matrix(nrow = nrow(optimalClassMeans()))
   })
@@ -1117,11 +1245,11 @@ server <- function(input, output, session) {
       layout(xaxis = list(title = "", dtick = 1),
              yaxis = list(title = ""))
   })
-  
+
   optiClicked <- reactive({
     event_data("plotly_click", source = "heatplot")
   })
-  
+
   observeEvent(optiClicked(), {
     table = t(
       getPCA(
@@ -1136,7 +1264,7 @@ server <- function(input, output, session) {
       rownames_to_column(var = paste(optiClicked()[["y"]], "Characteristics"))
     colnames(table)[2] = "Average Judge Score"
     showModal(modalDialog(easyClose = T, renderDataTable(table[order(table[, 2], decreasing =
-                                                                       T), ])))
-    
+                                                                       T),])))
+
   })
 }
