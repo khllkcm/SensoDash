@@ -897,7 +897,7 @@ ui <- argonDashPage(
                 selectInput(
                   "validVMethod",
                   "Validation Method",
-                  choices = c("internal", "stability")
+                  choices = list("full"="internal", "stepwise"="stability")
                 ),
                 argonRow(
                   argonColumn(
