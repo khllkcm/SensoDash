@@ -1230,17 +1230,17 @@ server <- function(input, output, session) {
   })
   output$optimalClassCharac = renderPlotly({
     plot_ly(
-      x = as.factor(unique(isolate(
+      x = as.factor(unique(
         optimalClasses()
-      ))),
-      y = rownames(isolate(optimalClassMeans())),
-      z = isolate(optimalClassMeans()),
+      )),
+      y = rownames(optimalClassMeans()),
+      z = optimalClassMeans(),
       type = "heatmap",
       source = "heatplot",
       xgap = 5,
       ygap = 3,
       hoverinfo = "text",
-      text = isolate(optimalClassMeansText())
+      text = optimalClassMeansText()
     ) %>%
       layout(xaxis = list(title = "", dtick = 1),
              yaxis = list(title = ""))
