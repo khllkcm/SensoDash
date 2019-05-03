@@ -10,8 +10,10 @@ SensoDashUI()
 A User Interface for the SensoDash package. The UI is a Shiny application for consumer data segmentation.
 }
 \examples{
-library(SensoDash)
 
-SensoDashUI()
+if (interactive()) {
 
+ SensoDashUI()
+
+}
 }
