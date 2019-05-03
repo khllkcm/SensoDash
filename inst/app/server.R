@@ -718,7 +718,7 @@ server <- function(input, output, session) {
   ## Class Preference ----
   classes = eventReactive(input$run, {
     plot_ly(
-      x = as.factor(unique(obj.classes())),
+      x = sort(as.factor(unique(obj.classes()))),
       y = rownames(isolate(classMeans())),
       z = isolate(classMeans()),
       type = "heatmap",
@@ -1230,9 +1230,9 @@ server <- function(input, output, session) {
   })
   output$optimalClassCharac = renderPlotly({
     plot_ly(
-      x = as.factor(unique(
+      x = sort(as.factor(unique(
         optimalClasses()
-      )),
+      ))),
       y = rownames(optimalClassMeans()),
       z = optimalClassMeans(),
       type = "heatmap",
