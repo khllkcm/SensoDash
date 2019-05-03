@@ -2,9 +2,9 @@ ui <- argonDashPage(
   title = "Sensory Data Analysis Dashboard",
   author = "Khalil",
   description = "Dash Board",
-  
+
   # Sidebar ----
-  
+
   sidebar = argonDashSidebar(
     skin = "light",
     background = "white",
@@ -53,23 +53,23 @@ ui <- argonDashPage(
       )
     )
   ),
-  
+
   # Navbar ----
-  
+
   navbar = NULL,
-  
+
   # Header ----
-  
-  
+
+
   header = argonDashHeader(
     gradient = TRUE,
     color = "primary",
     separator = TRUE,
     separator_color = "secondary"
   ),
-  
+
   # Body ----
-  
+
   body = argonDashBody(
     ## CSS ----
     tags$head(
@@ -96,13 +96,13 @@ ui <- argonDashPage(
           size = "sm",
           width = 12,
           iconList = NULL,
-          
+
           ### Hedo dataset ----
-          
+
           argonTab(
             tabName = "Hedonic dataset",
             active = TRUE,
-            
+
             argonRow(
               argonColumn(
                 width = 3,
@@ -144,7 +144,7 @@ ui <- argonDashPage(
                     )
                   )
                 ),
-                
+
                 argonRow(
                   argonColumn(width = 6,
                               checkboxInput("headerHedo", "Header", TRUE)),
@@ -175,7 +175,7 @@ ui <- argonDashPage(
               )
             )
           ),
-          
+
           ### Sensory dataset ----
           argonTab(
             tabName = "Sensory dataset",
@@ -221,7 +221,7 @@ ui <- argonDashPage(
                     )
                   )
                 ),
-                
+
                 argonRow(
                   argonColumn(width = 6,
                               checkboxInput("headerSenso", "Header", TRUE)),
@@ -255,11 +255,11 @@ ui <- argonDashPage(
               )
             )
           )
-          
+
         )
-        
+
       ),
-      
+
       ## EDA ----
       argonTabItem(
         tabName = "eda",
@@ -271,9 +271,9 @@ ui <- argonDashPage(
           size = "sm",
           width = 12,
           iconList = NULL,
-          
+
           ### Boxplot ----
-          
+
           argonTab(
             tabName = "Boxplot",
             active = TRUE,
@@ -295,7 +295,7 @@ ui <- argonDashPage(
               )
             )
           ),
-          
+
           ### ANOVA ----
           argonTab(
             tabName = "ANOVA",
@@ -318,14 +318,14 @@ ui <- argonDashPage(
               )
             )
           )
-          
+
         )
-        
+
       ),
-      
-      
+
+
       ## PCA ----
-      
+
       argonTabItem(
         tabName = "pca",
         argonTabSet(
@@ -336,9 +336,9 @@ ui <- argonDashPage(
           size = "sm",
           width = 12,
           iconList = NULL,
-          
+
           ### Scree plot ----
-          
+
           argonTab(
             tabName = "Scree plot",
             active = TRUE,
@@ -365,9 +365,9 @@ ui <- argonDashPage(
               )
             )
           ),
-          
+
           ### Variable plot ----
-          
+
           argonTab(
             tabName = "Variables",
             active = FALSE,
@@ -380,10 +380,10 @@ ui <- argonDashPage(
                   choices = seq(5),
                   selected = 1
                 ),
-                
+
                 uiOutput("secondSelector"),
-                
-                
+
+
                 sliderInput(
                   "n_cos2",
                   label = "cos2:",
@@ -406,9 +406,9 @@ ui <- argonDashPage(
               )
             )
           ),
-          
+
           ### Bi-plot ----
-          
+
           argonTab(
             tabName = "Biplot",
             active = FALSE,
@@ -421,9 +421,9 @@ ui <- argonDashPage(
                   choices = seq(5),
                   selected = 1
                 ),
-                
+
                 uiOutput("secondSelector2")
-                
+
               ),
               argonColumn(
                 center = T,
@@ -438,9 +438,9 @@ ui <- argonDashPage(
               )
             )
           )
-          
+
         )
-        
+
       ),
       ## Maps ----
       argonTabItem(
@@ -454,7 +454,7 @@ ui <- argonDashPage(
           width = 12,
           iconList = NULL,
           ## Prediction map ----
-          
+
           argonTab(
             tabName = "Score Prediction Map",
             active = TRUE,
@@ -532,7 +532,7 @@ ui <- argonDashPage(
                     )
                 )
               )
-              
+
             )
           ),
           ## Preference map ----
@@ -606,12 +606,12 @@ ui <- argonDashPage(
                     )
                 )
               )
-              
+
             )
           )
         )
       ),
-      
+
       ## Clustering ----
       argonTabItem(
         tabName = "clust",
@@ -639,7 +639,7 @@ ui <- argonDashPage(
                 )
               ),
               checkboxInput("repel", "Repel", value = F),
-              
+
               ### Hierarchical Clustering inputs ----
               conditionalPanel(
                 condition = "input.clusterAlgo=='Hierarchical'",
@@ -696,7 +696,7 @@ ui <- argonDashPage(
                   step = 1
                 )
               )
-              
+
               ### DIANA inputs ----
               ,
               conditionalPanel(
@@ -713,7 +713,7 @@ ui <- argonDashPage(
                   step = 1
                 )
               )
-              
+
               ### CLARA inputs ----
               ,
               conditionalPanel(
@@ -732,7 +732,7 @@ ui <- argonDashPage(
                   step = 1
                 )
               )
-              
+
               ### PAM inputs ----
               ,
               conditionalPanel(
@@ -749,8 +749,8 @@ ui <- argonDashPage(
                   step = 1
                 )
               )
-              
-              
+
+
               ### SOM inputs ----
               ,
               conditionalPanel(
@@ -772,7 +772,7 @@ ui <- argonDashPage(
                   step = 1
                 )
               )
-              
+
               ### SOTA inputs ----
               ,
               conditionalPanel(
@@ -788,7 +788,7 @@ ui <- argonDashPage(
               ),
               argonRow(center = T,
                        actionButton(inputId = "run", "Run"))
-              
+
             ),
             argonColumn(
               width = 10,
@@ -807,9 +807,9 @@ ui <- argonDashPage(
                       )
                   )
                 ),
-                
+
                 ### Clusters ----
-                
+
                 tabPanel(
                   "Clusters",
                   argonColumn(
@@ -837,7 +837,7 @@ ui <- argonDashPage(
                     hidden(downloadButton('downloadDendroPlot', "Download PNG"))
                   )
                 ),
-                
+
                 ### Class Preference ----
                 tabPanel(
                   "Class Characteristics",
@@ -851,16 +851,16 @@ ui <- argonDashPage(
                       )
                   )
                 )
-                
-                
-                
+
+
+
               )
             )
           )
         )
-        
+
       ),
-      
+
       # Validity ----
       argonTabItem(
         tabName = "validity",
@@ -939,13 +939,13 @@ ui <- argonDashPage(
             width = 12,
             iconList = NULL,
             ## Optimal CLusters ----
-            
+
             argonTab(
               tabName = "Optimal Cluster Map",
               active = TRUE,
               argonRow(
                 argonColumn(
-                  width = 2,
+                  width = 3,
                   uiOutput("optimalMeasures"),
                   argonRow(),
                   argonRow(),
@@ -956,7 +956,7 @@ ui <- argonDashPage(
                   ))
                 ),
                 argonColumn(
-                  width = 10,
+                  width = 9,
                   center = T,
                   plotOutput("optimalClusterPlot", height = "100%") %>%
                     withSpinner(
@@ -971,7 +971,7 @@ ui <- argonDashPage(
               )
             ),
             ## Optimal Prediction map ----
-            
+
             argonTab(
               tabName = "Class Prediction Map",
               active = F,
@@ -1052,7 +1052,7 @@ ui <- argonDashPage(
                       )
                   )
                 )
-                
+
               )
             ),
             ## Optimal Preference map ----
@@ -1129,7 +1129,7 @@ ui <- argonDashPage(
                       )
                   )
                 )
-                
+
               )
             ),
             argonTab(
@@ -1147,14 +1147,14 @@ ui <- argonDashPage(
             )
           )
         )
-        
+
       )
-      
+
     )
-    
+
   ),
-  
-  
+
+
   # Footer ----
   footer = verbatimTextOutput("tab")
 )
