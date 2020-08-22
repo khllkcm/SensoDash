@@ -82,176 +82,188 @@ ui <- argonDashPage(
       ## Datasets ----
       argonTabItem(
         tabName = "data",
-        argonTabSet(
-          id = "tab-1",
-          card_wrapper = TRUE,
-          horizontal = TRUE,
-          circle = FALSE,
-          size = "sm",
+        argonColumn(
           width = 12,
-          iconList = NULL,
-
-          ### Hedo dataset ----
-
-          argonTab(
-            tabName = "Hedonic dataset",
-            active = TRUE,
-
-            argonRow(
-              argonColumn(
-                width = 3,
-                argonColumn(
-                  fileInput(
-                    "fileHedo",
-                    "Choose CSV File",
-                    multiple = TRUE,
-                    accept = c("text/csv",
-                               "text/comma-separated-values,text/plain",
-                               ".csv")
-                  )
-                ),
-                argonRow(
-                  argonColumn(
-                    width = 6,
-                    radioButtons(
-                      "sepHedo",
-                      "Separator",
-                      choices = c(
-                        Comma = ",",
-                        Semicolon = ";",
-                        Tab = "\t"
-                      ),
-                      selected = ";"
-                    )
-                  ),
-                  argonColumn(
-                    width = 6,
-                    radioButtons(
-                      "quoteHedo",
-                      "Quote",
-                      choices = c(
-                        None = "",
-                        "Double Quote" = '"',
-                        "Single Quote" = "'"
-                      ),
-                      selected = '"'
-                    )
-                  )
-                ),
-
-                argonRow(
-                  argonColumn(width = 6,
-                              checkboxInput("headerHedo", "Header", TRUE)),
-                  argonColumn(
-                    width = 6,
-                    radioButtons(
-                      "decHedo",
-                      "Decimal",
-                      choices = c(",","."),
-                      selected = "."
-                    )
-                  )
-                ),
-                argonColumn(
-                  center = T,
-                  actionButton("validateHedo", "Validate Hedonic Dataset")
-                )
-              ),
-              argonColumn(
-                center = T,
-                width = 9,
-                dataTableOutput("contentsHedo") %>%
-                  withSpinner(
-                    color = "#5e72e4",
-                    type = 7,
-                    proxy.height = "400px"
-                  )
-              )
-            )
+          argonRow(
+            argonColumn(width=4),
+            argonAlert(
+              icon = icon("exclamation-triangle"),
+              status = "info",
+              "Validate both datasets before continuing.",
+              closable = TRUE
+            ),
+            argonColumn(width=4)
           ),
-
-          ### Sensory dataset ----
-          argonTab(
-            tabName = "Sensory dataset",
-            active = FALSE,
-            argonRow(
-              argonColumn(
-                width = 3,
+          argonTabSet(
+            id = "tab-1",
+            card_wrapper = TRUE,
+            horizontal = TRUE,
+            circle = FALSE,
+            size = "sm",
+            width = 12,
+            iconList = NULL,
+  
+            ### Hedo dataset ----
+  
+            argonTab(
+              tabName = "Hedonic dataset",
+              active = TRUE,
+  
+              argonRow(
                 argonColumn(
-                  fileInput(
-                    "fileSenso",
-                    "Choose CSV File",
-                    multiple = TRUE,
-                    accept = c("text/csv",
-                               "text/comma-separated-values,text/plain",
-                               ".csv")
-                  )
-                ),
-                argonRow(
+                  width = 3,
                   argonColumn(
-                    width = 6,
-                    radioButtons(
-                      "sepSenso",
-                      "Separator",
-                      choices = c(
-                        Comma = ",",
-                        Semicolon = ";",
-                        Tab = "\t"
-                      ),
-                      selected = ","
+                    fileInput(
+                      "fileHedo",
+                      "Choose CSV File",
+                      multiple = TRUE,
+                      accept = c("text/csv",
+                                 "text/comma-separated-values,text/plain",
+                                 ".csv")
+                    )
+                  ),
+                  argonRow(
+                    argonColumn(
+                      width = 6,
+                      radioButtons(
+                        "sepHedo",
+                        "Separator",
+                        choices = c(
+                          Comma = ",",
+                          Semicolon = ";",
+                          Tab = "\t"
+                        ),
+                        selected = ";"
+                      )
+                    ),
+                    argonColumn(
+                      width = 6,
+                      radioButtons(
+                        "quoteHedo",
+                        "Quote",
+                        choices = c(
+                          None = "",
+                          "Double Quote" = '"',
+                          "Single Quote" = "'"
+                        ),
+                        selected = '"'
+                      )
+                    )
+                  ),
+  
+                  argonRow(
+                    argonColumn(width = 6,
+                                checkboxInput("headerHedo", "Header", TRUE)),
+                    argonColumn(
+                      width = 6,
+                      radioButtons(
+                        "decHedo",
+                        "Decimal",
+                        choices = c(",","."),
+                        selected = "."
+                      )
                     )
                   ),
                   argonColumn(
-                    width = 6,
-                    radioButtons(
-                      "quoteSenso",
-                      "Quote",
-                      choices = c(
-                        None = "",
-                        "Double Quote" = '"',
-                        "Single Quote" = "'"
-                      ),
-                      selected = '"'
-                    )
+                    center = T,
+                    actionButton("validateHedo", "Validate Hedonic Dataset")
                   )
                 ),
-
-                argonRow(
-                  argonColumn(width = 6,
-                              checkboxInput("headerSenso", "Header", TRUE)),
-                  argonColumn(
-                    width = 6,
-                    radioButtons(
-                      "decSenso",
-                      "Decimal",
-                      choices = c(",","."),
-                      selected = "."
-                    )
-                  )
-                ),
-                uiOutput("selectSensoSession"),
-                uiOutput("selectSensoJudge"),
-                uiOutput("selectSensoProduct"),
                 argonColumn(
                   center = T,
-                  actionButton("validateSenso", "Validate Sensory Dataset")
+                  width = 9,
+                  dataTableOutput("contentsHedo") %>%
+                    withSpinner(
+                      color = "#5e72e4",
+                      type = 7,
+                      proxy.height = "400px"
+                    )
                 )
-              ),
-              argonColumn(
-                center = T,
-                width = 9,
-                dataTableOutput("contentsSenso") %>%
-                  withSpinner(
-                    color = "#5e72e4",
-                    type = 7,
-                    proxy.height = "400px"
+              )
+            ),
+  
+            ### Sensory dataset ----
+            argonTab(
+              tabName = "Sensory dataset",
+              active = FALSE,
+              argonRow(
+                argonColumn(
+                  width = 3,
+                  argonColumn(
+                    fileInput(
+                      "fileSenso",
+                      "Choose CSV File",
+                      multiple = TRUE,
+                      accept = c("text/csv",
+                                 "text/comma-separated-values,text/plain",
+                                 ".csv")
+                    )
+                  ),
+                  argonRow(
+                    argonColumn(
+                      width = 6,
+                      radioButtons(
+                        "sepSenso",
+                        "Separator",
+                        choices = c(
+                          Comma = ",",
+                          Semicolon = ";",
+                          Tab = "\t"
+                        ),
+                        selected = ","
+                      )
+                    ),
+                    argonColumn(
+                      width = 6,
+                      radioButtons(
+                        "quoteSenso",
+                        "Quote",
+                        choices = c(
+                          None = "",
+                          "Double Quote" = '"',
+                          "Single Quote" = "'"
+                        ),
+                        selected = '"'
+                      )
+                    )
+                  ),
+  
+                  argonRow(
+                    argonColumn(width = 6,
+                                checkboxInput("headerSenso", "Header", TRUE)),
+                    argonColumn(
+                      width = 6,
+                      radioButtons(
+                        "decSenso",
+                        "Decimal",
+                        choices = c(",","."),
+                        selected = "."
+                      )
+                    )
+                  ),
+                  uiOutput("selectSensoSession"),
+                  uiOutput("selectSensoJudge"),
+                  uiOutput("selectSensoProduct"),
+                  argonColumn(
+                    center = T,
+                    actionButton("validateSenso", "Validate Sensory Dataset")
                   )
+                ),
+                argonColumn(
+                  center = T,
+                  width = 9,
+                  dataTableOutput("contentsSenso") %>%
+                    withSpinner(
+                      color = "#5e72e4",
+                      type = 7,
+                      proxy.height = "400px"
+                    )
+                )
               )
             )
+  
           )
-
         )
-
       ),
 
       ## EDA ----
