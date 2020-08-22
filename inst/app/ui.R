@@ -17,38 +17,32 @@ ui <- argonDashPage(
     argonSidebarMenu(
       argonSidebarItem(
         tabName = "data",
-        icon = "single-copy-04",
-        icon_color = "default",
+        icon = argonIcon("single-copy-04", "default"),
         "Upload Datasets"
       ),
       argonSidebarItem(
         tabName = "eda",
-        icon = "chart-pie-35",
-        icon_color = "warning",
+        icon = argonIcon("chart-pie-35", "warning"),
         "Exploratory Data Analysis"
       ),
       argonSidebarItem(
         tabName = "pca",
-        icon = "chart-bar-32",
-        icon_color = "success",
+        icon = argonIcon("chart-bar-32", "success"),
         "Principle Component Analysis"
       ),
       argonSidebarItem(
         tabName = "maps",
-        icon = "map-big",
-        icon_color = "info",
+        icon = argonIcon("map-big", "info"),
         "Global Maps"
       ),
       argonSidebarItem(
         tabName = "clust",
-        icon = "building",
-        icon_color = "danger",
+        icon = argonIcon("building", "danger"),
         "Clustering"
       ),
       argonSidebarItem(
         tabName = "validity",
-        icon = "check-bold",
-        icon_color = "success",
+        icon = argonIcon("check-bold", "success"),
         "Cluster Validation"
       )
     )
